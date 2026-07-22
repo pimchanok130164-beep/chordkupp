@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sushi Chord Bar - เสิร์ฟคอร์ดทบเจ็ด</title>
+    <!-- ดึงฟอนต์ Mali สไตล์น่ารักมินิมอล -->
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@400;600;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Mali', sans-serif; }
+        
+        body { 
+            background: #2a1a10; 
+            color: #333; 
+            height: 100vh; height: 100dvh; 
+            display: flex; align-items: center; justify-content: center; 
+            overflow: hidden; touch-action: none;
+        }
+
+        /* 📱 กรอบร้านอาหาร */
+        #app-container {
+            width: 100%; max-width: 420px; 
+            height: 100%; height: 100dvh;
+            background: linear-gradient(to bottom, #d97d3a 0%, #b85b20 100%);
+            display: flex; flex-direction: column; position: relative; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5); overflow: hidden;
+            border-left: 10px solid #8b4513; border-right: 10px solid #8b4513;
+        }
+
+        /* ---------------- 🏷️ ส่วนหัว (Header) ---------------- */
+        .header-bar {
+            width: 100%; display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 15px; z-index: 20; flex-shrink: 0; margin-bottom: 0;
+        }
+        .score-box { background: rgba(255,255,255,0.9); padding: 5px 12px; border-radius: 12px; font-size: 0.95rem; font-weight: 900; color: #d97d3a; box-shadow: 0 4px 6px rgba(0,0,0,0.2); border: 2px solid #8b4513;}
+        .btn-pause {
+            width: 38px; height: 38px; background: #e8e0d5; border: 3px solid #8b4513;
+            border-radius: 10px; font-size: 1.1rem; font-weight: 900; color: #8b4513;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2); transition: 0.1s; -webkit-tap-highlight-color: transparent;
+        }
+        .btn-pause:active { transform: scale(0.9); }
+
+        /* ---------------- 📋 ป้ายออเดอร์ ---------------- */
+        .order-section {
+            width: 100%; display: flex; justify-content: center; z-index: 10; flex-shrink: 0;
+            padding-top: 5px; margin-bottom: -15px; position: relative;
+        }
+        .order-board {
+            background: #fdfaf1; border: 4px solid #d97d3a; border-radius: 15px;
+            width: 92%; padding: 8px 10px 5px 10px; text-align: center;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3); position: relative;
+        }
+        .order-board::after {
+            content: '🌊'; position: absolute; bottom: 2px; right: 8px; font-size: 1.5rem; opacity: 0.2; pointer-events: none;
+        }
+
+        .target-title { font-size: 1.8rem; color: #d97d3a; font-weight: 900; line-height: 1; text-shadow: 1px 1px 0px #fff; }
+        .target-subtitle { font-size: 1.1rem; color: #5c4322; font-weight: 700; margin-left: 5px; }
+
+        /* 🎼 บรรทัด 5 เส้น */
+        .staff {
+            width: 85%; height: 65px; position: relative; margin: 10px auto 5px auto;
+        }
+        .line { width: 100%; height: 2px; background: #d97d3a; position: absolute; margin-bottom: -1px; opacity: 0.7;}
+        .line-1 { bottom: 12px; }
+        .line-2 { bottom: 22px; }
+        .line-3 { bottom: 32px; }
+        .line-4 { bottom: 42px; }
+        .line-5 { bottom: 52px; }
+
+        .clef-svg {
+            position: absolute; left: -14px; bottom: -18px; width: 60px; height: 100px; pointer-events: none; z-index: 2; opacity: 0.9;
+        }
+
+        /* ⚪ โน้ตตัวกลม */
+        .note {
+            position: absolute; width: 14px; height: 10px; 
+            border: 2.5px solid #5c4322; border-radius: 50%;
+            margin-left: -7px; margin-bottom: -5px;
+            display: flex; align-items: center; justify-content: center; z-index: 5;
+            transition: bottom 0.2s ease;
+        }
+        .note.bounce { animation: popNote 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popNote { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+
+        .accidental {
+            position: absolute; right: 100%; top: 50%; transform: translateY(-50%);
+            margin-right: 3px; font-size: 1.1rem; color: #5c4322; font-family: 'Times New Roman', serif; line-height: 0;
+            text-shadow: 1px 1px 0 #fdfaf1, -1px -1px 0 #fdfaf1;
+        }
+        .ledger-line {
+            position: absolute; width: 24px; height: 2px; background: #5c4322;
+            top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: -1;
+        }
+
+        /* ---------------- 🧑🏻 ลูกค้าและบรรยากาศ ---------------- */
+        .customer-zone {
+            flex: 1; min-height: 0;
+            position: relative; display: flex; justify-content: center; align-items: flex-end;
+            z-index: 5; padding-top: 20px;
+        }
+        .bg-shop {
+            position: absolute; width: 120%; height: 100%; top: 0; left: -10%;
+            background: rgba(139, 69, 19, 0.2); border-top: 8px solid #5c3a21; z-index: -2;
+        }
+        .lantern { position: absolute; font-size: 2.5rem; top: 10px; right: 15px; z-index: -1; animation: swing 3s infinite ease-in-out alternate; transform-origin: top center;}
+        .menu-sign { position: absolute; font-size: 2.2rem; top: 20px; left: 10px; z-index: -1; }
+        @keyframes swing { 0% { transform: rotate(-5deg); } 100% { transform: rotate(5deg); } }
+
+        .character-img {
+            height: 100%; max-height: 250px; width: auto; object-fit: contain;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-bottom: -5px; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.3));
+        }
+        
+        .speech-bubble {
+            position: absolute; background: #fff; border: 3px solid #5c4322; border-radius: 15px;
+            padding: 6px 12px; font-weight: 700; color: #5c4322; font-size: 0.95rem;
+            top: 8%; right: 3%; box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            animation: float 2s infinite ease-in-out alternate; max-width: 130px; text-align: center;
+        }
+        .speech-bubble::after {
+            content: ''; position: absolute; bottom: -8px; left: 15px;
+            border-width: 8px 8px 0; border-style: solid; border-color: #fff transparent transparent transparent;
+        }
+        .speech-bubble::before {
+            content: ''; position: absolute; bottom: -12px; left: 13px;
+            border-width: 10px 10px 0; border-style: solid; border-color: #5c4322 transparent transparent transparent; z-index: -1;
+        }
+        @keyframes float { 0% { transform: translateY(0); } 100% { transform: translateY(-6px); } }
+
+        /* ---------------- 🍣 เคาน์เตอร์ไม้ (Control Panel) ---------------- */
+        .control-panel {
+            width: 100%; background: #e09f5a; border-top: 6px solid #a35a22;
+            padding: 10px 8px calc(10px + env(safe-area-inset-bottom)) 8px; 
+            box-shadow: 0 -8px 15px rgba(0,0,0,0.2);
+            position: relative; z-index: 20; border-radius: 20px 20px 0 0;
+            display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;
+        }
+        .table-decor {
+            position: absolute; font-size: 2rem; top: -28px; left: 10px; pointer-events: none; text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+
+        .note-keys { display: flex; justify-content: center; gap: 5px; }
+        .btn-key {
+            flex: 1; height: 42px; background: #fdfaf1; border: 3px solid #8b4513; border-bottom: 4px solid #8b4513;
+            border-radius: 10px; font-size: 1.1rem; font-weight: 900; color: #5c4322;
+            cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: 0.1s; -webkit-tap-highlight-color: transparent;
+        }
+        .btn-key:active { transform: translateY(3px); border-bottom-width: 2px; background: #ffe3c2;}
+
+        .action-keys { display: flex; justify-content: center; gap: 6px; }
+        .btn-acc {
+            width: 55px; height: 42px; background: #fdfaf1; border: 3px solid #8b4513; border-bottom: 4px solid #8b4513;
+            border-radius: 10px; font-size: 1.3rem; font-weight: 900; color: #d97d3a; font-family: serif;
+            cursor: pointer; transition: 0.1s; -webkit-tap-highlight-color: transparent;
+        }
+        .btn-acc:active { transform: translateY(3px); border-bottom-width: 2px; }
+
+        .btn-func {
+            flex: 1; height: 42px; border: 3px solid #fff; border-bottom: 4px solid #ccc;
+            border-radius: 10px; font-size: 1.1rem; font-weight: 900; color: #fff;
+            cursor: pointer; transition: 0.1s; -webkit-tap-highlight-color: transparent;
+        }
+        .btn-undo { background: #8b4513; border-color: #5c2b09; border-bottom-color: #3d1b04; }
+        .btn-serve { background: #3e8e41; border-color: #2b662d; border-bottom-color: #1b451d; font-size: 1.2rem; }
+        .btn-func:active { transform: translateY(3px); border-bottom-width: 2px; }
+
+        /* ---------------- หน้ากากเมนู (Overlay Modal) ---------------- */
+        .overlay-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(42, 26, 16, 0.95); z-index: 1000; display: none;
+            flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(5px); text-align: center; padding: 20px;
+        }
+        .overlay-title { font-size: 2.2rem; color: #fdfaf1; font-weight: 900; margin-bottom: 8px; text-shadow: 2px 2px 0px #d97d3a; line-height: 1.2;}
+        
+        .instruction-box {
+            background: #fdfaf1; border: 3px solid #d97d3a; padding: 15px; 
+            border-radius: 15px; width: 100%; text-align: left; margin-bottom: 20px;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.5);
+            max-height: 60vh; overflow-y: auto;
+        }
+        .instruction-box h3 { color: #d97d3a; margin-bottom: 8px; font-size: 1.1rem; text-align: center;}
+        .instruction-box p { font-size: 0.9rem; color: #5c4322; font-weight: 600; margin-bottom: 6px; line-height: 1.4;}
+        .instruction-box hr { border: 1px solid #e09f5a; margin: 10px 0; opacity: 0.5; }
+
+        /* กล่องคำแนะนำก่อนเริ่มเกม (Start Instruction Box) */
+        .start-instruction-box {
+            background: #fdfaf1; padding: 20px; 
+            border-radius: 20px; width: 100%; text-align: center; margin-bottom: 25px;
+            box-shadow: 0 8px 0 #8b4513, 0 15px 20px rgba(0,0,0,0.4);
+            border: 3px dashed #d97d3a;
+        }
+
+        .btn-group-vertical {
+            display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 280px;
+        }
+        
+        .btn-action {
+            padding: 12px 20px; font-size: 1.2rem; font-weight: 700; color: #fff;
+            background: #d97d3a; border: 3px solid #fff; border-bottom: 6px solid #a35a22; border-radius: 25px;
+            cursor: pointer; box-shadow: 0 8px 15px rgba(0,0,0,0.3); transition: all 0.2s; width: 100%;
+        }
+        .btn-action:active { transform: translateY(3px); border-bottom-width: 3px; }
+        
+        .btn-secondary { background: #e09f5a; border-bottom-color: #8b4513; color: #fff; font-size: 1.1rem; }
+
+        /* ---------------- 📖 กล่องคู่มือการเล่น (How to Play Modal) ---------------- */
+        .how-to-overlay { background: rgba(42, 26, 16, 0.95); z-index: 1200; }
+        .guide-modal { position: relative; width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; }
+        .guide-header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .guide-title { font-size: 2.2rem; color: #78c850; font-weight: 900; text-shadow: 0 3px 0 #1b2e22; }
+
+        .btn-close-x {
+            width: 45px; height: 45px; background: #ff5252; border: 3px solid #fff; border-radius: 50%;
+            color: #fff; font-size: 1.5rem; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4); transition: 0.1s; -webkit-tap-highlight-color: transparent;
+        }
+        .btn-close-x:active { transform: scale(0.9); }
+
+        /* แผ่นแผนภาพวาดคำอธิบายวิธีเล่น จัดเรียงแบบ Flex ไม่ให้ทับซ้อน */
+        .guide-diagram-canvas {
+            width: 100%; height: 500px; position: relative; overflow-y: auto; overflow-x: hidden;
+            background: rgba(0,0,0,0.2); border-radius: 20px; padding: 15px;
+            border: 2px dashed rgba(255,255,255,0.2); display: flex; flex-direction: column; align-items: center; gap: 15px;
+        }
+        .guide-diagram-canvas::-webkit-scrollbar { width: 0; } /* ซ่อน scrollbar */
+
+        /* กล่องจำลองในคู่มือ */
+        .demo-board { background: #fdfaf1; border: 3px solid #d97d3a; border-radius: 15px; width: 90%; padding: 10px; text-align: center; }
+        .demo-keyboard { background: #e09f5a; border-radius: 15px; padding: 10px; width: 100%; }
+        .demo-key-row { display: flex; gap: 4px; justify-content: center; margin-bottom: 5px; }
+        .demo-key-sm { flex: 1; height: 35px; background: #fdfaf1; border: 2px solid #8b4513; border-bottom: 3px solid #8b4513; border-radius: 8px; font-size: 0.9rem; font-weight: 900; color: #5c4322; display: flex; align-items: center; justify-content: center; }
+        .demo-serve-btn { background: #3e8e41; border: 2px solid #2b662d; border-bottom: 3px solid #1b451d; color: white; padding: 8px 15px; border-radius: 8px; font-weight: 900; font-size: 1.1rem; }
+
+        .chalk-text { color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-weight: 700; line-height: 1.4; text-align: center; width: 100%; font-size: 1.05rem; }
+
+        /* ลูกศรเชื่อม */
+        .down-arrow { width: 40px; height: 40px; margin: -5px 0; opacity: 0.9; }
+
+        .feedback { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 3.5rem; z-index: 500; opacity: 0; pointer-events: none;}
+        .feedback.show { animation: popFeedbackFX 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popFeedbackFX { 0% { transform: translate(-50%, -20%) scale(0.3); opacity: 0; } 50% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; } 100% { transform: translate(-50%, -60%) scale(1); opacity: 0; } }
+
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        
+        <!-- 🏷️ Header -->
+        <div class="header-bar">
+            <div class="score-box">ยอดขาย: ฿<span id="scoreDisplay">0</span></div>
+            <button class="btn-pause" onclick="pauseGame()">⏸</button>
+        </div>
+
+        <!-- 📋 ป้ายออเดอร์ -->
+        <div class="order-section">
+            <div class="order-board" id="boardWrapper">
+                <div>
+                    <span class="target-title" id="targetRoot">C</span>
+                    <span class="target-subtitle" id="targetType">Major 7</span>
+                </div>
+                
+                <div class="staff">
+                    <svg class="clef-svg" viewBox="0 0 100 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+                        <text x="8" y="155" font-family="'Times New Roman', Georgia, serif" font-size="140" fill="#d97d3a">&#119070;</text>
+                    </svg>
+                    
+                    <div class="line line-1"></div>
+                    <div class="line line-2"></div>
+                    <div class="line line-3"></div>
+                    <div class="line line-4"></div>
+                    <div class="line line-5"></div>
+                    
+                    <div id="notesContainer"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🧑🏻 โซนลูกค้า -->
+        <div class="customer-zone">
+            <div class="bg-shop"></div>
+            <div class="lantern">🏮</div>
+            <div class="menu-sign">🍱</div>
+            
+            <div class="speech-bubble" id="speechBubble">ลูกค้ามาแล้ว!</div>
+            <img class="character-img" id="customerImg" src="" alt="Customer">
+            
+            <div class="table-decor">🍣🍵</div>
+        </div>
+
+        <!-- 🍣 แผงควบคุมกดโน้ต -->
+        <div class="control-panel">
+            <div class="note-keys">
+                <button class="btn-key" onclick="addNote('C')">C</button>
+                <button class="btn-key" onclick="addNote('D')">D</button>
+                <button class="btn-key" onclick="addNote('E')">E</button>
+                <button class="btn-key" onclick="addNote('F')">F</button>
+                <button class="btn-key" onclick="addNote('G')">G</button>
+                <button class="btn-key" onclick="addNote('A')">A</button>
+                <button class="btn-key" onclick="addNote('B')">B</button>
+            </div>
+            <div class="action-keys">
+                <button class="btn-acc" onclick="modifyAccidental('b')">♭</button>
+                <button class="btn-acc" onclick="modifyAccidental('nat')">♮</button>
+                <button class="btn-acc" onclick="modifyAccidental('#')">♯</button>
+                
+                <button class="btn-func btn-undo" onclick="undoNote()">ลบ ⌫</button>
+                <button class="btn-func btn-serve" onclick="serveOrder()">เสิร์ฟ! 🍣</button>
+            </div>
+        </div>
+
+        <div id="feedbackText" class="feedback"></div>
+
+        <!-- 📖 หน้าต่างคู่มือการเล่น (แสดงเป็นหน้าแรกสุด) -->
+        <div id="howToPlayScreen" class="overlay-screen how-to-overlay" style="display: flex;">
+            <div class="guide-modal">
+                <div class="guide-header">
+                    <span class="guide-title">คู่มือการเล่น</span>
+                    <button class="btn-close-x" onclick="closeHowToPlay()">✕</button>
+                </div>
+
+                <!-- แผ่นวาดภาพจำลองวิธีเล่นแบบแนวตั้ง ป้องกันการทับซ้อน -->
+                <div class="guide-diagram-canvas">
+                    
+                    <!-- ส่วนที่ 1: ดูออเดอร์ -->
+                    <div class="demo-board">
+                        <span style="font-size: 1.5rem; color: #d97d3a; font-weight: 900;">D <span style="font-size: 0.9rem; color: #5c4322;">minor-Major 7</span></span>
+                        <div style="height: 20px; border-bottom: 2px solid #d97d3a; margin-bottom: 10px;"></div>
+                    </div>
+                    <div class="chalk-text">ดูออเดอร์ ชื่อคอร์ด 7 จากป้ายด้านบน</div>
+                    
+                    <!-- ลูกศรชี้ลง -->
+                    <svg class="down-arrow" viewBox="0 0 24 24" fill="none" stroke="#8bc34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="2" x2="12" y2="22"></line>
+                        <polyline points="19 15 12 22 5 15"></polyline>
+                    </svg>
+
+                    <!-- ส่วนที่ 2: กดแป้นคีย์บอร์ด -->
+                    <div class="demo-keyboard">
+                        <div class="demo-key-row">
+                            <div class="demo-key-sm">C</div><div class="demo-key-sm">D</div><div class="demo-key-sm">E</div><div class="demo-key-sm">F</div>
+                            <div class="demo-key-sm">G</div><div class="demo-key-sm">A</div><div class="demo-key-sm">B</div>
+                        </div>
+                        <div class="demo-key-row">
+                            <div class="demo-key-sm" style="color:#d97d3a; font-family:serif;">♭</div>
+                            <div class="demo-key-sm" style="color:#d97d3a; font-family:serif;">♮</div>
+                            <div class="demo-key-sm" style="color:#d97d3a; font-family:serif;">♯</div>
+                            <div class="demo-key-sm" style="flex:1.5; background:#8b4513; color:#fff; border-color:#5c2b09;">ลบ ⌫</div>
+                        </div>
+                    </div>
+                    <div class="chalk-text">กดปุ่มตัวอักษรเพื่อเรียงโน้ตให้ครบ 4 ตัว<br>เติม <span style="color:#ffb74d;">♯</span> หรือ <span style="color:#ffb74d;">♭</span> ให้ตัวโน้ตล่าสุด</div>
+
+                    <!-- ลูกศรชี้ลง -->
+                    <svg class="down-arrow" viewBox="0 0 24 24" fill="none" stroke="#8bc34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="2" x2="12" y2="22"></line>
+                        <polyline points="19 15 12 22 5 15"></polyline>
+                    </svg>
+
+                    <!-- ส่วนที่ 3: เสิร์ฟ -->
+                    <div class="demo-serve-btn">เสิร์ฟ! 🍣</div>
+                    <div class="chalk-text">มั่นใจแล้วกด เสิร์ฟ! ให้ลูกค้าเลย</div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- 🏠 หน้าต่างเริ่มเกม (Lobby) ซ่อนไว้ตอนแรก -->
+        <div id="startScreen" class="overlay-screen" style="display: none;">
+            <h1 class="overlay-title">Sushi 7th<br>Chord Bar 🍣</h1>
+            
+            <!-- กล่องคำแนะนำสไตล์เกมสเกล -->
+            <div class="start-instruction-box">
+                <p style="font-size: 1.3rem; color: #8b4513; font-weight: 900; line-height: 1.5; margin-bottom:10px;">
+                    🍣 พร้อมรับลูกค้าหรือยัง?
+                </p>
+                <p style="font-size: 1rem; color: #5c4322; font-weight: 700;">จำให้แม่น! โครงสร้างของคอร์ดทบเจ็ด</p>
+                <p style="font-size: 0.9rem; color: #d13c3c; font-weight: 700; margin-top: 10px;">
+                    ถ้ายังไม่แม่น แวะอ่านเมนูทบทวนก่อนได้นะ
+                </p>
+            </div>
+
+            <div class="btn-group-vertical">
+                <button class="btn-action" onclick="startGame()">เริ่มทำอาหาร 🍣</button>
+                <button class="btn-action btn-secondary" onclick="openReview()">ทบทวนเมนูคอร์ดทบเจ็ด 📖</button>
+            </div>
+        </div>
+
+        <!-- 📖 หน้าต่างทบทวนเมนู (ทฤษฎีคอร์ดทบเจ็ด) -->
+        <div id="reviewScreen" class="overlay-screen">
+            <h1 class="overlay-title" style="font-size: 1.8rem; margin-bottom: 5px;">📖 สูตรลับคอร์ดทบเจ็ด</h1>
+            
+            <div class="instruction-box">
+                <p style="text-align: center; color: #d97d3a;"><b>คอร์ดทบเจ็ด (7th Chords)</b><br>คือคอร์ดที่มีโน้ต 4 ตัวซ้อนกันเป็นคู่ 3<br>มีทั้งหมด 6 ชนิดหลักๆ ดังนี้:</p>
+                <hr>
+                <p><b>1. Major 7 (M7)</b><br>✨ อารมณ์: สว่าง หรูหรา ล่องลอย<br>🧩 โครงสร้าง: 1 - 3 - 5 - 7</p><hr>
+                <p><b>2. Dominant 7 (7)</b><br>🧲 อารมณ์: ดึงดูด ส่งแรงไปหาคอร์ดเป้าหมาย<br>🧩 โครงสร้าง: 1 - 3 - 5 - ♭7</p><hr>
+                <p><b>3. Minor 7 (m7)</b><br>🌧️ อารมณ์: หม่น นุ่มนวล ไม่ตึงเครียดมาก<br>🧩 โครงสร้าง: 1 - ♭3 - 5 - ♭7</p><hr>
+                <p><b>4. Half-Diminished 7 (m7♭5)</b><br>🎭 อารมณ์: ลึกลับ กึ่งสว่างกึ่งมืด<br>🧩 โครงสร้าง: 1 - ♭3 - ♭5 - ♭7</p><hr>
+                <p><b>5. Diminished 7 (dim7 หรือ °7)</b><br>👻 อารมณ์: น่ากลัว ตึงเครียดสุดๆ<br>🧩 โครงสร้าง: 1 - ♭3 - ♭5 - 𝄫7 (ดับเบิ้ลแฟลต 7)</p><hr>
+                <p><b>6. Minor-Major 7 (mM7)</b><br>🕵️ อารมณ์: ลึกลับ สายลับ แนวเจมส์บอนด์<br>🧩 โครงสร้าง: 1 - ♭3 - 5 - 7</p>
+            </div>
+            
+            <button class="btn-action btn-secondary" onclick="closeReview()">ปิดหน้าต่าง ❌</button>
+        </div>
+
+        <!-- ⏸️ หน้าต่างหยุดเกม -->
+        <div id="pauseScreen" class="overlay-screen">
+            <h1 class="overlay-title">พักดื่มชา 🍵</h1>
+            <div class="btn-group-vertical">
+                <button class="btn-action" onclick="resumeGame()">▶ ลุยงานต่อ</button>
+                <button class="btn-action btn-secondary" onclick="openReviewFromPause()">ทบทวนเมนู 📖</button>
+                <button class="btn-action" style="background:#fff; color:#d13c3c; border-color:#d13c3c; border-bottom-color:#a32f2f;" onclick="showStartScreen()">🔄 กลับหน้าร้าน</button>
+            </div>
+        </div>
+
+        <!-- 💀 หน้าต่างจบเกม -->
+        <div id="gameOverScreen" class="overlay-screen">
+            <h1 class="overlay-title" style="color: #ffcccc;">ร้านแตก! 💥</h1>
+            <div style="background: #fdfaf1; padding: 15px 30px; border-radius: 20px; margin: 20px 0; border: 4px solid #d97d3a;">
+                <p style="font-size: 1.2rem; color: #5c4322; font-weight: 700;">ยอดขายรวมวันนี้</p>
+                <p style="font-size: 3rem; color: #d97d3a; font-weight: 900; line-height: 1;">฿<span id="finalScore">0</span></p>
+            </div>
+            <button class="btn-action" onclick="showStartScreen()">กลับหน้าร้าน ↺</button>
+        </div>
+
+    </div>
+
+    <script>
+        // ---------------- 🎵 ระบบ SFX ----------------
+        const popSound = new Audio('https://assets.mixkit.co/active_storage/sfx/1114/1114-preview.mp3'); 
+        const errorSound = new Audio('https://assets.mixkit.co/active_storage/sfx/314/314-preview.mp3');
+        const successSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3'); 
+        const serveSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3');
+        
+        function playSound(audio) { audio.currentTime = 0; audio.volume = 0.5; audio.play().catch(e=>{}); }
+
+        // ---------------- 📚 ฐานข้อมูลเมนูคอร์ดทบเจ็ด (7th Chords) ----------------
+        const menuBank = [
+            { root: "C", type: "Major 7", notes: ["C", "E", "G", "B"] },
+            { root: "C", type: "Dominant 7", notes: ["C", "E", "G", "Bb"] },
+            { root: "C", type: "minor 7", notes: ["C", "Eb", "G", "Bb"] },
+            { root: "C", type: "minor-Major 7", notes: ["C", "Eb", "G", "B"] },
+            { root: "C", type: "diminished 7", notes: ["C", "Eb", "Gb", "Bbb"] }, 
+            { root: "D", type: "minor 7", notes: ["D", "F", "A", "C"] },
+            { root: "D", type: "Dominant 7", notes: ["D", "F#", "A", "C"] },
+            { root: "D", type: "minor-Major 7", notes: ["D", "F", "A", "C#"] },
+            { root: "D", type: "diminished 7", notes: ["D", "F", "Ab", "Cb"] },
+            { root: "E", type: "minor 7", notes: ["E", "G", "B", "D"] },
+            { root: "F", type: "Major 7", notes: ["F", "A", "C", "E"] },
+            { root: "G", type: "Dominant 7", notes: ["G", "B", "D", "F"] },
+            { root: "A", type: "minor 7", notes: ["A", "C", "E", "G"] },
+            { root: "A", type: "minor-Major 7", notes: ["A", "C", "E", "G#"] },
+            { root: "B", type: "half-dim 7", notes: ["B", "D", "F", "A"] },
+            { root: "Bb", type: "Major 7", notes: ["Bb", "D", "F", "A"] }
+        ];
+
+        const noteNaturalPos = { "C": 0, "D": 1, "E": 2, "F": 3, "G": 4, "A": 5, "B": 6 };
+        
+        // ---------------- 🧑🏻 ระบบลูกค้า Avatar ----------------
+        const customerSeeds = ["Felix", "Oliver", "Zoe", "Leo", "Mia", "Jack", "Lily"];
+        let currentCustomerSeed = "Felix";
+
+        function getAvatarUrl(seed, emotion) {
+            let mouth = "default"; 
+            if (emotion === 'happy') mouth = "smile";
+            if (emotion === 'angry') mouth = "sad";
+            return `https://api.dicebear.com/8.x/avataaars/svg?seed=${seed}&mouth=${mouth}&backgroundColor=transparent`;
+        }
+
+        // ---------------- ⚙️ ตัวแปรควบคุมเกม ----------------
+        let score = 0;
+        let mistakes = 0;
+        let currentOrder = null;
+        let placedNotes = []; 
+        let isWaiting = false;
+        let isPaused = false; 
+
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const targetRoot = document.getElementById('targetRoot');
+        const targetType = document.getElementById('targetType');
+        const notesContainer = document.getElementById('notesContainer');
+        const speechBubble = document.getElementById('speechBubble');
+        const customerImg = document.getElementById('customerImg');
+        const feedbackText = document.getElementById('feedbackText');
+
+        const screens = {
+            howTo: document.getElementById('howToPlayScreen'),
+            start: document.getElementById('startScreen'),
+            gameover: document.getElementById('gameOverScreen'),
+            pause: document.getElementById('pauseScreen'),
+            review: document.getElementById('reviewScreen')
+        };
+
+        function hideAllScreens() { Object.values(screens).forEach(s => s.style.display = 'none'); }
+
+        // ---------------- 📖 ฟังก์ชันเปิด/ปิด หน้าต่างต่างๆ ----------------
+        function closeHowToPlay() {
+            playSound(popSound);
+            hideAllScreens();
+            screens.start.style.display = 'flex';
+        }
+
+        function showStartScreen() {
+            playSound(popSound);
+            hideAllScreens();
+            screens.start.style.display = 'flex';
+        }
+
+        function openReview() {
+            playSound(popSound);
+            hideAllScreens();
+            screens.review.style.display = 'flex';
+        }
+
+        function openReviewFromPause() {
+            playSound(popSound);
+            screens.pause.style.display = 'none';
+            screens.review.style.display = 'flex';
+        }
+
+        function closeReview() {
+            playSound(popSound);
+            hideAllScreens();
+            if (isPaused) {
+                screens.pause.style.display = 'flex';
+            } else {
+                screens.start.style.display = 'flex';
+            }
+        }
+
+        function startGame() {
+            playSound(popSound);
+            hideAllScreens();
+            isPaused = false;
+            score = 0; mistakes = 0;
+            scoreDisplay.textContent = score;
+            nextCustomer();
+        }
+
+        function pauseGame() {
+            if (isWaiting || screens.start.style.display === 'flex' || screens.gameover.style.display === 'flex' || screens.howTo.style.display === 'flex') return;
+            playSound(popSound);
+            isPaused = true;
+            screens.pause.style.display = 'flex';
+        }
+
+        function resumeGame() {
+            playSound(popSound);
+            isPaused = false;
+            hideAllScreens();
+        }
+
+        function nextCustomer() {
+            isWaiting = false;
+            placedNotes = [];
+            renderStaff();
+            
+            currentCustomerSeed = customerSeeds[Math.floor(Math.random() * customerSeeds.length)];
+            customerImg.src = getAvatarUrl(currentCustomerSeed, 'normal');
+            
+            customerImg.style.transform = 'scale(0)';
+            setTimeout(() => { customerImg.style.transform = 'scale(1)'; }, 100);
+
+            const phrases = ["ขอสั่ง", "รับคอร์ด", "หิว", "จัดมาเลย"];
+            
+            currentOrder = menuBank[Math.floor(Math.random() * menuBank.length)];
+            targetRoot.textContent = currentOrder.root;
+            targetType.textContent = currentOrder.type;
+            
+            speechBubble.textContent = `${phrases[Math.floor(Math.random() * phrases.length)]} ${currentOrder.root} ${currentOrder.type} ค้าบ!`;
+        }
+
+        // ---------------- 🎹 ระบบใส่โน้ต ----------------
+        function addNote(baseNote) {
+            if (isWaiting || placedNotes.length >= 4) return; 
+            playSound(popSound);
+            
+            if (placedNotes.some(n => n.base === baseNote)) return;
+
+            let rootBase = currentOrder.root.replace(/[#b]/g, '');
+            let rootPos = noteNaturalPos[rootBase];
+            let naturalPos = noteNaturalPos[baseNote];
+            let finalPos = naturalPos;
+
+            if (naturalPos < rootPos) {
+                finalPos += 7;
+            }
+
+            placedNotes.push({ base: baseNote, acc: '', pos: finalPos });
+            renderStaff();
+        }
+
+        function modifyAccidental(accType) {
+            if (isWaiting || placedNotes.length === 0) return;
+            playSound(popSound);
+            
+            let lastNote = placedNotes[placedNotes.length - 1];
+            
+            if (accType === 'nat') {
+                lastNote.acc = '';
+            } else if (accType === '#') {
+                if (lastNote.acc === '#') lastNote.acc = '##';
+                else lastNote.acc = '#';
+            } else if (accType === 'b') {
+                if (lastNote.acc === 'b') lastNote.acc = 'bb';
+                else lastNote.acc = 'b';
+            }
+            
+            renderStaff();
+        }
+
+        function undoNote() {
+            if (isWaiting || placedNotes.length === 0) return;
+            playSound(popSound);
+            placedNotes.pop();
+            renderStaff();
+        }
+
+        function renderStaff() {
+            notesContainer.innerHTML = '';
+            let sortedNotes = [...placedNotes].sort((a, b) => a.pos - b.pos);
+
+            sortedNotes.forEach((noteData, index) => {
+                const el = document.createElement('div');
+                el.className = 'note bounce';
+                el.style.left = '45%';
+                
+                let calculatedBottom = 2 + (noteData.pos * 5);
+                el.style.bottom = calculatedBottom + 'px';
+
+                let accidentalSym = "";
+                if (noteData.acc === '#') accidentalSym = '&#9839;';
+                if (noteData.acc === 'b') accidentalSym = '&#9837;';
+                if (noteData.acc === '##') accidentalSym = '&#119082;'; 
+                if (noteData.acc === 'bb') accidentalSym = '&#119083;'; 
+
+                let ledgerHTML = '';
+                if (noteData.pos <= 0 || noteData.pos >= 12) {
+                    ledgerHTML = '<div class="ledger-line"></div>';
+                }
+
+                el.innerHTML = `
+                    ${accidentalSym ? `<span class="accidental">${accidentalSym}</span>` : ''}
+                    ${ledgerHTML}
+                `;
+                notesContainer.appendChild(el);
+            });
+        }
+
+        // ---------------- 🍣 ระบบเสิร์ฟและตรวจคำตอบ ----------------
+        function serveOrder() {
+            if (isWaiting) return;
+            if (placedNotes.length !== 4) {
+                speechBubble.textContent = "คอร์ด 7 ต้องมี 4 ตัวนะวัยรุ่น!";
+                customerImg.src = getAvatarUrl(currentCustomerSeed, 'angry'); 
+                return;
+            }
+            isWaiting = true;
+            playSound(serveSound);
+
+            let playerNoteNames = placedNotes.map(n => n.base + n.acc);
+            let targetNotes = currentOrder.notes;
+
+            let isCorrect = targetNotes.every(targetNote => playerNoteNames.includes(targetNote));
+
+            if (isCorrect) {
+                playSound(successSound);
+                score += 250;
+                scoreDisplay.textContent = score;
+                
+                customerImg.src = getAvatarUrl(currentCustomerSeed, 'happy');
+                customerImg.style.transform = 'scale(1.1) translateY(-10px)'; 
+                
+                speechBubble.textContent = "อร่อยมาก ฟินสุดๆ!!";
+                showFeedback("✨ 🍣 ✨", "");
+                
+                setTimeout(() => {
+                    customerImg.style.transform = 'scale(1)';
+                    nextCustomer();
+                }, 2000);
+            } else {
+                playSound(errorSound);
+                mistakes++;
+                
+                customerImg.src = getAvatarUrl(currentCustomerSeed, 'angry');
+                customerImg.style.transform = 'scale(0.95)'; 
+                
+                speechBubble.textContent = "นี่มันไม่ใช่คอร์ดทบเจ็ดที่สั่งนิ!";
+                showFeedback("❌", "");
+                
+                setTimeout(() => {
+                    customerImg.style.transform = 'scale(1)';
+                    if (mistakes >= 3) {
+                        document.getElementById('finalScore').textContent = score;
+                        screens.gameover.style.display = 'flex';
+                    } else {
+                        placedNotes = [];
+                        renderStaff();
+                        speechBubble.textContent = "ทำมาให้ใหม่ด่วนๆ เลย!";
+                        isWaiting = false;
+                    }
+                }, 2000);
+            }
+        }
+
+        function showFeedback(msg, color) {
+            feedbackText.textContent = msg;
+            feedbackText.style.color = color;
+            feedbackText.classList.remove('show');
+            void feedbackText.offsetWidth; 
+            feedbackText.classList.add('show');
+        }
+
+    </script>
+</body>
+</html>

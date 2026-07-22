@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Cozy Scale Drip - คาเฟ่สเกลกระดานเขียว</title>
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Mali', sans-serif; user-select: none; }
+        
+        /* 🤎 พื้นหลังลายตาราง Gingham สีละมุน สไตล์ Cozy */
+        body { 
+            background-color: #fdfaf6;
+            background-image: 
+                linear-gradient(90deg, rgba(186, 156, 133, 0.22) 50%, transparent 50%),
+                linear-gradient(0deg, rgba(186, 156, 133, 0.22) 50%, transparent 50%);
+            background-size: 50px 50px;
+            color: #5d4037; 
+            height: 100vh; height: 100dvh; 
+            display: flex; align-items: center; justify-content: center; 
+            overflow: hidden; touch-action: none;
+        }
+
+        /* 📱 กรอบร้านคาเฟ่ (App Container) */
+        #app-container {
+            width: 100%; max-width: 420px; 
+            height: 100%; height: 100dvh; 
+            background-color: #fffcf4;
+            background-image: radial-gradient(#d7ccc8 15%, transparent 16%), 
+                              radial-gradient(#d7ccc8 15%, transparent 16%);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            border-radius: 35px; border: 8px solid #fff;
+            box-shadow: 0 15px 40px rgba(93, 64, 55, 0.3);
+            position: relative; 
+            display: flex; flex-direction: column; align-items: center; padding: 20px 15px;
+            overflow: hidden; 
+        }
+
+        /* ---------------- ส่วนหัว (Header - ป้ายเมนูกระดานดำสีเขียว) ---------------- */
+        .header-board {
+            background: #2e4233; border: 4px solid #8d6e63; border-radius: 22px;
+            width: 100%; text-align: center; padding: 15px 20px 12px 20px; margin-bottom: 12px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.3), 0 8px 0 #6d4c41, 0 12px 18px rgba(0, 0, 0, 0.15);
+            position: relative; flex-shrink: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        /* จัดเรียงปุ่มและชื่อเกมให้อยู่ด้านบน */
+        .header-top {
+            width: 100%; display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        .game-name-small {
+            font-size: 0.9rem; color: #a3c2a9; font-weight: 700; letter-spacing: 1px;
+            text-transform: uppercase; background: rgba(0,0,0,0.2); padding: 4px 12px; border-radius: 10px;
+        }
+        
+        .huge-target {
+            font-size: 1.85rem; color: #fff8e1; font-weight: 900; line-height: 1.2; margin-top: 5px;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.4); width: 100%; text-align: center;
+        }
+
+        /* ปุ่มหยุดเกม (Cozy Chalk Pause Button) ย้ายออกจาก absolute */
+        .btn-pause {
+            width: 42px; height: 42px; background: #fffcf4; border: 3px solid #8d6e63;
+            border-radius: 14px; font-size: 1.2rem; color: #5d4037;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 5px 0 #6d4c41; transition: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            -webkit-tap-highlight-color: transparent; flex-shrink: 0;
+        }
+        .btn-pause:active { transform: translateY(5px); box-shadow: 0 0 0 transparent; }
+
+        /* HUD - หัวใจและคะแนน */
+        .hud-info {
+            width: 100%; display: flex; justify-content: space-between; align-items: center;
+            padding: 0 5px; margin-bottom: 5px;
+        }
+        .score-board { font-size: 1.1rem; color: #2e4233; font-weight: 900; background: #a3c2a9; padding: 4px 12px; border-radius: 12px; }
+        .lives-board { font-size: 1.3rem; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1)); letter-spacing: 2px; background: #fffcf4; padding: 4px 10px; border-radius: 12px; border: 2px dashed #bcaaa4; }
+
+        /* ---------------- พื้นที่เล่นเกม (Green Chalkboard Area) ---------------- */
+        .board-wrapper {
+            position: relative; width: 100%; flex: 1; min-height: 0;
+            background: #2e4233; border: 6px solid #8d6e63; border-radius: 25px; border-bottom: none;
+            box-shadow: inset 0 0 25px rgba(0,0,0,0.5), 0 10px 15px rgba(93, 64, 55, 0.2);
+            display: flex; flex-direction: column; overflow: hidden; touch-action: none;
+        }
+
+        #gameArea {
+            width: 100%; height: 100%; position: relative; overflow: hidden; cursor: pointer; 
+        }
+
+        /* 💧 หยดน้ำโน้ตดนตรี */
+        .falling-note {
+            position: absolute; width: 55px; height: 55px; 
+            background: #e0f7fa; /* สีฟ้าพาสเทลใสๆ */
+            border-radius: 0 50% 50% 50%; /* ทรงหยดน้ำ (แหลมชี้ขึ้นบนเมื่อหมุน 45 องศา) */
+            color: #006064; font-size: 1.4rem; font-weight: 900; 
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: inset 4px 4px 8px rgba(255,255,255,0.9), inset -4px -4px 8px rgba(0,96,100,0.15), 0 6px 12px rgba(0,0,0,0.3);
+            border: 2px solid #b2ebf2;
+            transform: translateX(-50%) rotate(45deg); z-index: 5;
+        }
+        /* ดัดตัวหนังสือให้ตรงกลับมา และขยับศูนย์กลางนิดหน่อยให้เข้ากับทรงหยดน้ำ */
+        .falling-note span { transform: rotate(-45deg) translate(-2px, 2px); display: block; } 
+
+        /* ☕ ถ้วยดริปเปอร์ (Dripper) */
+        #glass {
+            position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
+            width: 80px; height: 70px; z-index: 15;
+            background: #fffcf4;
+            border-radius: 5px 5px 40px 40px; 
+            box-shadow: 0 8px 0 #8d6e63, inset 0 -10px 20px rgba(93, 64, 55, 0.15);
+        }
+        /* หูจับถ้วย */
+        #glass::before { 
+            content: ''; position: absolute; top: 15px; right: -15px; width: 20px; height: 30px; 
+            border: 6px solid #fffcf4; border-left: none; border-radius: 0 15px 15px 0;
+            box-shadow: 3px 4px 0 #8d6e63; z-index: -1;
+        }
+        /* ปากถ้วย */
+        #glass::after {
+            content: ''; position: absolute; top: -10px; left: -10px; width: calc(100% + 20px); height: 20px;
+            background: #5d4037; border-radius: 50%; box-shadow: inset 0 -5px 5px rgba(0,0,0,0.5);
+        }
+
+        .flash-red { animation: flashRed 0.3s; }
+        @keyframes flashRed { 0% { background-color: #ffcdd2; } 100% { background-color: #2e4233; } }
+        .shake { animation: shake 0.3s; }
+        @keyframes shake { 0%, 100% { transform: translateX(-50%); } 25% { transform: translateX(calc(-50% - 15px)); } 75% { transform: translateX(calc(-50% + 15px)); } }
+
+        /* ---------------- แถบแสดงโน้ตด้านล่าง (Coffee Slots) ---------------- */
+        .collected-bar {
+            width: 100%; display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
+            margin-top: 12px; margin-bottom: 5px; flex-shrink: 0;
+        }
+        .slot {
+            width: 44px; height: 44px; background: #fffcf4; border-radius: 12px;
+            border: 2px dashed #bcaaa4; display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; font-weight: 900; color: #8d6e63;
+            box-shadow: inset 0 3px 6px rgba(0,0,0,0.05);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .slot.filled { 
+            background: #2e4233; border-color: #1b2e22; color: #fff8e1; border-style: solid;
+            transform: translateY(-5px); box-shadow: 0 6px 10px rgba(46, 66, 51, 0.4); 
+        }
+
+        /* ---------------- ☕ เมนูเริ่มและหยุดเกม ---------------- */
+        .overlay-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(46, 30, 24, 0.82); z-index: 1000; display: none;
+            flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(8px); text-align: center; padding: 20px;
+        }
+        .overlay-title { font-size: 2.3rem; color: #fff; font-weight: 900; margin-bottom: 15px; text-shadow: 0px 3px 0px #2e4233; line-height: 1.2;}
+        
+        .start-instruction-box {
+            background: #fff; padding: 22px 18px; 
+            border-radius: 25px; width: 90%; text-align: center; margin-bottom: 18px;
+            box-shadow: 0 10px 0 #f4e1d2, 0 20px 25px rgba(0, 0, 0, 0.25);
+            border: 3px dashed #a3c2a9;
+        }
+
+        .btn-action {
+            padding: 15px 30px; font-size: 1.25rem; font-weight: 900; color: #fff;
+            background: #2e4233; border: none; border-radius: 30px;
+            cursor: pointer; box-shadow: 0 8px 0 #1b2e22, 0 12px 18px rgba(0, 0, 0, 0.3); transition: all 0.15s; width: 85%; max-width: 250px; margin-bottom: 12px;
+        }
+        .btn-action:active { transform: translateY(8px); box-shadow: 0 0px 0 transparent; }
+        
+        .btn-secondary { background: #fff; color: #2e4233; box-shadow: 0 8px 0 #e6d8ce, 0 12px 18px rgba(0, 0, 0, 0.2); font-size: 1.15rem; }
+
+        /* Level Up Animation */
+        .level-up-text {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            font-size: 2.4rem; color: #fff8e1; font-weight: 900; text-shadow: 0 3px 0px #2e4233;
+            opacity: 0; pointer-events: none; z-index: 50; text-align: center; line-height: 1.2;
+            background: #2e4233; padding: 15px 30px; border-radius: 20px; border: 4px dashed #a3c2a9;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+        .level-up-text.show { animation: popText 2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes popText { 
+            0% { transform: translate(-50%, -10%) scale(0.5); opacity: 0; } 
+            15% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; } 
+            85% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 
+            100% { transform: translate(-50%, -80%) scale(0.8); opacity: 0; } 
+        }
+
+        /* ---------------- 📖 กล่องคู่มือการเล่น (How to Play Modal) ---------------- */
+        /* พื้นหลังโปร่งแสงโชว์ฉากหลังเบลอๆ แบบเดียวกับเกมสเกล */
+        .how-to-overlay { background: rgba(46, 30, 24, 0.85); z-index: 1200; }
+        
+        .guide-modal {
+            position: relative; width: 100%; max-width: 360px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .guide-header {
+            width: 100%; display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px;
+        }
+        .guide-title {
+            font-size: 2.2rem; color: #78c850; font-weight: 900;
+            text-shadow: 0 3px 0 #1b2e22, 0 0 12px rgba(120, 200, 80, 0.4);
+        }
+
+        /* ปุ่มกากบาท X สีแดง */
+        .btn-close-x {
+            width: 50px; height: 50px; background: #ff5252;
+            border: 4px solid #fff; border-radius: 50%;
+            color: #fff; font-size: 1.8rem; font-weight: 900;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+            transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-close-x:active { transform: scale(0.9); }
+
+        /* แผ่นแผนภาพวาดคำอธิบายวิธีเล่น จัดเรียงแบบ Flex ไม่ให้ทับซ้อน */
+        .guide-diagram-canvas {
+            width: 100%; height: 480px; position: relative; overflow-y: auto; overflow-x: hidden;
+            background: rgba(0,0,0,0.15); border-radius: 25px; padding: 20px 15px;
+            border: 2px dashed rgba(255,255,255,0.2); margin-bottom: 15px;
+            display: flex; flex-direction: column; align-items: center; gap: 15px;
+        }
+        .guide-diagram-canvas::-webkit-scrollbar { width: 0; }
+
+        /* กล่องจำลองหยดน้ำ */
+        .demo-drop-zone {
+            position: relative; width: 120px; height: 120px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;
+        }
+        .demo-drop {
+            position: absolute; width: 42px; height: 42px; background: #e0f7fa;
+            border-radius: 0 50% 50% 50%; color: #006064; font-size: 0.95rem; font-weight: 900;
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid #b2ebf2; transform: rotate(45deg);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .demo-drop span { transform: rotate(-45deg); }
+
+        /* SVG ลูกศรชี้ลง */
+        .down-arrow { width: 40px; height: 40px; margin: -5px 0; opacity: 0.9; flex-shrink: 0; }
+
+        /* กล่องข้อความลายมือชอล์ก */
+        .chalk-text-box {
+            color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            font-weight: 700; line-height: 1.35; text-align: center; width: 100%; flex-shrink: 0;
+        }
+
+        /* ---------------- 📖 กล่องทบทวนบทเรียน ---------------- */
+        .review-box {
+            background: #fff; padding: 20px; 
+            border-radius: 25px; width: 100%; text-align: left; margin-bottom: 22px;
+            box-shadow: 0 10px 0 #f4e1d2, 0 20px 25px rgba(93, 64, 55, 0.1);
+            max-height: 60vh; overflow-y: auto;
+        }
+        .review-box::-webkit-scrollbar { width: 6px; }
+        .review-box::-webkit-scrollbar-thumb { background: #a3c2a9; border-radius: 10px; }
+
+        .chord-info { margin-bottom: 12px; font-size: 0.95rem; padding: 14px; border-radius: 16px; background: #fdfaf6; border: 2px dashed #a3c2a9; }
+        .chord-title { font-weight: 900; color: #2e4233; font-size: 1.1rem;}
+        .chord-desc { color: #5d4037; font-weight: 600; display: block; margin-top: 5px; line-height: 1.5; }
+
+        /* ---------------- 💀 หน้าจอจบเกมส์ ---------------- */
+        #gameOverScreen { justify-content: center; display: none; }
+        .go-box { background: #fff; padding: 30px 25px; border-radius: 35px; box-shadow: 0 10px 0 #f4e1d2, 0 20px 40px rgba(93, 64, 55, 0.15); width: 100%; text-align: center; border: 4px dashed #a3c2a9; }
+        .go-box h2 { font-size: 2.2rem; color: #2e4233; margin-bottom: 20px; font-weight: 900; }
+        .result-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; background: #fdfaf6; border-radius: 20px; overflow: hidden; border: 2px dashed #bcaaa4;}
+        .result-table td { padding: 15px; border-bottom: 2px dashed #bcaaa4; font-size: 1.1rem; }
+        .result-table td:first-child { text-align: left; color: #5d4037; font-weight: bold; }
+        .result-table td:last-child { text-align: right; font-weight: 900; color: #2e4233; font-size: 1.5rem;}
+        
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        
+        <!-- ส่วนหัวบอกโจทย์สเกล -->
+        <div class="header-board">
+            <div class="header-top">
+                <span class="game-name-small">Scale Drip Café ☕</span>
+                <button class="btn-pause" onclick="pauseGame()">⏸</button>
+            </div>
+            <h1 class="huge-target" id="targetScaleText">C Major</h1>
+        </div>
+
+        <!-- แถบแสดงคะแนนและหัวใจ -->
+        <div class="hud-info">
+            <div class="score-board">SCORE: <span id="scoreDisplay">0</span></div>
+            <div class="lives-board" id="livesDisplay">❤️❤️❤️</div>
+        </div>
+
+        <!-- กระดานเล่นเกม (กระดานดำคาเฟ่สีเขียว) -->
+        <div class="board-wrapper" id="boardWrapper">
+            <div id="gameArea">
+                <div id="glass"></div>
+                <div class="level-up-text" id="levelUpMsg">รสชาติดีมาก! ✨<br><span style="font-size: 1.2rem; color: #a3c2a9;">ออเดอร์สเกลถัดไป</span></div>
+            </div>
+        </div>
+
+        <!-- แถบแสดงโน้ตที่เก็บได้ -->
+        <div class="collected-bar" id="collectedBar">
+            <!-- จะถูกเติมด้วย Javascript -->
+        </div>
+
+        <!-- 🏠 หน้าต่างเริ่มเกมและทบทวน (ตั้งให้อยู่ด้านหลัง และจะเห็นชัดเมื่อปิดคู่มือ) -->
+        <div id="startOverlay" class="overlay-screen" style="display: flex; z-index: 1000;">
+            <h1 class="overlay-title">Scale Drip ☕</h1>
+            
+            <!-- กล่องคำแนะนำสไตล์เกมสเกล -->
+            <div class="start-instruction-box">
+                <p style="font-size: 1.25rem; color: #2e4233; font-weight: 900; line-height: 1.5; margin-bottom:10px;">
+                    🌱 พร้อมชงกาแฟสเกลแล้วหรือยัง?
+                </p>
+                <p style="font-size: 0.95rem; color: #5d4037; font-weight: 700;">จำให้แม่น! โน้ตในสเกลคืออะไรบ้าง</p>
+                <p style="font-size: 0.85rem; color: #e57373; font-weight: 700; margin-top: 10px;">
+                    ถ้ายังไม่แม่น แวะทบทวนสเกลก่อนได้นะ
+                </p>
+            </div>
+            
+            <button class="btn-action" onclick="startGame()">เริ่มดริปกาแฟ ▶</button>
+            <button class="btn-action btn-secondary" onclick="openReview()">ทบทวน 4 สเกล 🎼</button>
+        </div>
+
+        <!-- 📖 หน้าต่างคู่มือการเล่น (How to Play) - แสดงเป็นหน้าแรกสุดซ้อนทับแบบเบลอ -->
+        <div id="howToPlayScreen" class="overlay-screen how-to-overlay" style="display: flex;">
+            <div class="guide-modal">
+                <div class="guide-header">
+                    <span class="guide-title">คู่มือการเล่น</span>
+                    <button class="btn-close-x" onclick="closeHowToPlay()">✕</button>
+                </div>
+
+                <!-- แผ่นวาดภาพจำลองวิธีเล่น จัดระเบียบด้วย Flex ไม่ทับซ้อน -->
+                <div class="guide-diagram-canvas">
+                    
+                    <!-- 1. กลุ่มหยดน้ำ -->
+                    <div class="demo-drop-zone">
+                        <div class="demo-drop" style="top: 10px; left: 10px;"><span>Bb</span></div>
+                        <div class="demo-drop" style="top: 35px; left: 40px;"><span>C</span></div>
+                        <div class="demo-drop" style="top: 20px; left: 80px;"><span>G</span></div>
+                    </div>
+
+                    <div class="chalk-text-box" style="font-size: 1.15rem;">
+                        โน้ต หยดน้ำ<br><span style="font-size: 1.3rem;">หยดลงมา</span>
+                    </div>
+
+                    <!-- ลูกศรชี้ลง -->
+                    <svg class="down-arrow" viewBox="0 0 24 24" fill="none" stroke="#8bc34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="2" x2="12" y2="22"></line>
+                        <polyline points="19 15 12 22 5 15"></polyline>
+                    </svg>
+
+                    <!-- 2. แก้วกาแฟ -->
+                    <div id="demoGlass" style="position: relative; width: 65px; height: 55px; background: #fffcf4; border-radius: 4px 4px 30px 30px; box-shadow: 0 6px 0 #8d6e63; flex-shrink: 0;">
+                        <div style="position: absolute; top: 12px; right: -12px; width: 16px; height: 24px; border: 5px solid #fffcf4; border-left: none; border-radius: 0 12px 12px 0; box-shadow: 2px 3px 0 #8d6e63;"></div>
+                        <div style="position: absolute; top: -8px; left: -8px; width: calc(100% + 16px); height: 16px; background: #5d4037; border-radius: 50%;"></div>
+                    </div>
+
+                    <div class="chalk-text-box" style="font-size: 1.15rem;">
+                        ใช้แก้วกาแฟ<br>เลื่อน ซ้าย-ขวา<br>เพื่อรับโน้ตหยดน้ำ
+                    </div>
+
+                    <!-- ลูกศรชี้ลง -->
+                    <svg class="down-arrow" viewBox="0 0 24 24" fill="none" stroke="#8bc34a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="2" x2="12" y2="22"></line>
+                        <polyline points="19 15 12 22 5 15"></polyline>
+                    </svg>
+
+                    <!-- 3. แผงหัวใจ 3 ดวง -->
+                    <div style="background: #fffcf4; padding: 6px 14px; border-radius: 16px; border: 2px dashed #bcaaa4; font-size: 1.2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3); flex-shrink: 0;">
+                        ❤️❤️❤️
+                    </div>
+
+                    <div class="chalk-text-box" style="font-size: 1rem;">
+                        มีหัวใจให้ 3 ดวง<br><span style="color:#ffccbc;">หากตอบผิดหัวใจจะลด</span>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- 📖 หน้าต่างทบทวนเมนู -->
+        <div id="reviewScreen" class="overlay-screen">
+            <h1 class="overlay-title" style="font-size: 2rem;">📖 4 สเกลหลัก</h1>
+            
+            <div class="review-box">
+                <div class="chord-info">
+                    <span class="chord-title">☀️ Major Scale (เมเจอร์)</span>
+                    <span class="chord-desc">อารมณ์สว่าง สดใส<br>ตัวอย่าง: C Major (C - D - E - F - G - A - B)</span>
+                </div>
+                <div class="chord-info">
+                    <span class="chord-title">🌧️ Natural Minor (เนเจอรัลไมเนอร์)</span>
+                    <span class="chord-desc">อารมณ์หม่น เศร้า (ติดแฟลต ♭3, ♭6, ♭7)<br>ตัวอย่าง: A Minor (A - B - C - D - E - F - G)</span>
+                </div>
+                <div class="chord-info">
+                    <span class="chord-title">🕌 Harmonic Minor (ฮาร์โมนิกไมเนอร์)</span>
+                    <span class="chord-desc">เหมือน Natural Minor แต่ <b>ยกโน้ตตัวที่ 7 ขึ้นครึ่งเสียง (♯7)</b><br>ตัวอย่าง: A Harmonic (A - B - C - D - E - F - <b>G#</b>)</span>
+                </div>
+                <div class="chord-info">
+                    <span class="chord-title">🌊 Melodic Minor (เมโลดิกไมเนอร์)</span>
+                    <span class="chord-desc">เหมือน Natural Minor แต่ <b>ยกโน้ตตัวที่ 6 และ 7 ขึ้นครึ่งเสียง (♯6, ♯7)</b><br>ตัวอย่าง: A Melodic (A - B - C - D - E - <b>F#</b> - <b>G#</b>)</span>
+                </div>
+            </div>
+            
+            <button class="btn-action btn-secondary" style="max-width: 200px;" onclick="closeReview()">เข้าใจแล้ว! ❌</button>
+        </div>
+
+        <!-- หน้าต่างหยุดเกม -->
+        <div id="pauseModal" class="overlay-screen">
+            <h1 class="overlay-title" style="color: #fff;">พักจิบชา 🍵</h1>
+            <div style="display: flex; flex-direction: column; width:100%; align-items:center;">
+                <button class="btn-action" onclick="resumeGame()">▶ ลุยงานต่อ</button>
+                <button class="btn-action btn-secondary" onclick="openReviewFromPause()">ทบทวนสเกล 🎼</button>
+                <button class="btn-action btn-secondary" onclick="restartGame()">🔄 เททิ้งเริ่มใหม่</button>
+            </div>
+        </div>
+
+        <!-- 💀 หน้าจอจบเกมส์ -->
+        <div id="gameOverScreen" class="overlay-screen">
+            <div class="go-box">
+                <h2>กาแฟขม! 🥺</h2>
+                <table class="result-table">
+                    <tr><td>คะแนนรวม</td><td><span id="finalScore">0</span></td></tr>
+                    <tr><td colspan="2" style="text-align: center;"><span style="font-size:1rem; color:#5d4037;">ดริปสำเร็จไป</span><br><span id="finalLevel" style="font-size: 1.4rem; color: #2e4233; font-weight: 900;">0 สเกล</span></td></tr>
+                </table>
+                <button class="btn-action" onclick="backToStartScreen()">กลับหน้าร้าน 🌸</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ---------------- 🎵 ระบบคลังเสียง ----------------
+        const popSound = new Audio('https://assets.mixkit.co/active_storage/sfx/1114/1114-preview.mp3'); 
+        const errorSound = new Audio('https://assets.mixkit.co/active_storage/sfx/314/314-preview.mp3');
+        const successSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3'); 
+        
+        function playSound(audio) { 
+            audio.currentTime = 0; audio.volume = 0.5;
+            audio.play().catch(e => {}); 
+        }
+
+        // ---------------- 📚 ฐานข้อมูลเฉพาะ 4 สเกลหลัก ----------------
+        const scalesData = [
+            { name: "C Major", notes: ["C", "D", "E", "F", "G", "A", "B"] },
+            { name: "G Major", notes: ["G", "A", "B", "C", "D", "E", "F#"] },
+            { name: "F Major", notes: ["F", "G", "A", "Bb", "C", "D", "E"] },
+            { name: "A Natural Minor", notes: ["A", "B", "C", "D", "E", "F", "G"] },
+            { name: "E Natural Minor", notes: ["E", "F#", "G", "A", "B", "C", "D"] },
+            { name: "D Natural Minor", notes: ["D", "E", "F", "G", "A", "Bb", "C"] },
+            { name: "A Harmonic Minor", notes: ["A", "B", "C", "D", "E", "F", "G#"] },
+            { name: "E Harmonic Minor", notes: ["E", "F#", "G", "A", "B", "C", "D#"] },
+            { name: "D Harmonic Minor", notes: ["D", "E", "F", "G", "A", "Bb", "C#"] },
+            { name: "A Melodic Minor", notes: ["A", "B", "C", "D", "E", "F#", "G#"] },
+            { name: "E Melodic Minor", notes: ["E", "F#", "G", "A", "B", "C#", "D#"] },
+            { name: "D Melodic Minor", notes: ["D", "E", "F", "G", "A", "B", "C#"] }
+        ];
+
+        const allNotes = ["C", "C#", "D", "D#", "Eb", "E", "F", "F#", "G", "G#", "Ab", "A", "Bb", "B"];
+
+        let currentScaleInfo = null;
+        let targetNotes = [];       
+        let collectedNotes = [];    
+        let activeNotes = [];       
+        
+        let score = 0;
+        let lives = 3;
+        let level = 1;
+        let gameLoopId;
+        let spawnId;
+        
+        let fallSpeed = 1.2;        
+        let spawnRate = 1800;       
+        
+        let isTransitioning = false; 
+        let isPaused = false; 
+
+        const gameArea = document.getElementById('gameArea');
+        const boardWrapper = document.getElementById('boardWrapper');
+        const glass = document.getElementById('glass');
+        const targetScaleText = document.getElementById('targetScaleText');
+        const levelUpMsg = document.getElementById('levelUpMsg');
+        const pauseModal = document.getElementById('pauseModal');
+        const collectedBar = document.getElementById('collectedBar');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const livesDisplay = document.getElementById('livesDisplay');
+
+        // ---------------- 🎮 ระบบควบคุมถ้วยดริปเปอร์ ----------------
+        let glassX = gameArea.clientWidth / 2;
+        let isDragging = false;
+        
+        function moveGlass(clientX) {
+            if (isPaused) return; 
+            const rect = gameArea.getBoundingClientRect();
+            let x = clientX - rect.left;
+            const glassHalfWidth = 40; 
+            
+            if (x < glassHalfWidth) x = glassHalfWidth;
+            if (x > rect.width - glassHalfWidth) x = rect.width - glassHalfWidth;
+            
+            glassX = x;
+            glass.style.left = x + 'px';
+        }
+
+        function handleDragStart(e) {
+            isDragging = true;
+            let clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            moveGlass(clientX);
+        }
+
+        function handleDragMove(e) {
+            if (!isDragging || isPaused) return;
+            e.preventDefault(); 
+            let clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+            moveGlass(clientX);
+        }
+
+        function handleDragEnd() { isDragging = false; }
+
+        gameArea.addEventListener('mousedown', handleDragStart);
+        window.addEventListener('mousemove', handleDragMove, { passive: false });
+        window.addEventListener('mouseup', handleDragEnd);
+
+        gameArea.addEventListener('touchstart', handleDragStart, { passive: false });
+        window.addEventListener('touchmove', handleDragMove, { passive: false });
+        window.addEventListener('touchend', handleDragEnd);
+
+        // ---------------- 📖 เมนูคู่มือการเล่น (How to Play) ----------------
+        function closeHowToPlay() {
+            playSound(popSound);
+            document.getElementById('howToPlayScreen').style.display = 'none';
+        }
+
+        // ---------------- 📖 เมนูทบทวนสเกล ----------------
+        function openReview() {
+            playSound(popSound);
+            document.getElementById('startOverlay').style.display = 'none';
+            document.getElementById('reviewScreen').style.display = 'flex';
+        }
+
+        function openReviewFromPause() {
+            playSound(popSound);
+            document.getElementById('pauseModal').style.display = 'none';
+            document.getElementById('reviewScreen').style.display = 'flex';
+        }
+
+        function closeReview() {
+            playSound(popSound);
+            document.getElementById('reviewScreen').style.display = 'none';
+            if (isPaused) {
+                document.getElementById('pauseModal').style.display = 'flex';
+            } else {
+                document.getElementById('startOverlay').style.display = 'flex';
+            }
+        }
+
+        // ---------------- ⏸️ ระบบหยุดเกม / เริ่มใหม่ ----------------
+        function pauseGame() {
+            if (isTransitioning) return;
+            playSound(popSound);
+            isPaused = true;
+            pauseModal.style.display = 'flex';
+        }
+
+        function resumeGame() {
+            playSound(popSound);
+            isPaused = false;
+            pauseModal.style.display = 'none';
+        }
+
+        function restartGame() {
+            playSound(popSound);
+            isPaused = false;
+            pauseModal.style.display = 'none';
+            
+            activeNotes.forEach(n => n.element.remove());
+            activeNotes = [];
+            startGameInit();
+        }
+
+        function backToStartScreen() {
+            playSound(popSound);
+            let currentProgress = parseInt(localStorage.getItem('chordkupp_progress')) || 1;
+            if(currentProgress < 2) { 
+                localStorage.setItem('chordkupp_progress', 2);
+                window.location.href = 'index.html'; }
+        }
+    
+
+        function updateUI() {
+            scoreDisplay.textContent = score;
+            livesDisplay.textContent = "❤️".repeat(Math.max(0, lives)) + "🤍".repeat(Math.max(0, 3 - lives));
+        }
+
+        function triggerGameOver() {
+            isPaused = true;
+            cancelAnimationFrame(gameLoopId);
+            clearInterval(spawnId);
+            
+            setTimeout(() => {
+                document.getElementById('finalScore').textContent = score;
+                document.getElementById('finalLevel').textContent = `${level - 1} สเกล`;
+                document.getElementById('gameOverScreen').style.display = 'flex';
+            }, 500);
+        }
+
+        // ---------------- 🚀 ฟังก์ชันหลักของเกม ----------------
+        function startGame() {
+            playSound(popSound);
+            document.getElementById('startOverlay').style.display = 'none';
+            document.getElementById('howToPlayScreen').style.display = 'none';
+            
+            activeNotes.forEach(n => n.element.remove());
+            activeNotes = [];
+            startGameInit();
+        }
+        
+        function startGameInit() {
+            score = 0;
+            lives = 3;
+            level = 1;
+            fallSpeed = 1.2;
+            spawnRate = 1800;
+            isPaused = false;
+            
+            updateUI();
+            loadNewScale();
+            gameLoopId = requestAnimationFrame(updateGame);
+            
+            clearInterval(spawnId);
+            spawnId = setInterval(spawnNote, spawnRate);
+        }
+
+        function loadNewScale() {
+            isTransitioning = false;
+            const randomIndex = Math.floor(Math.random() * scalesData.length);
+            currentScaleInfo = scalesData[randomIndex];
+            targetNotes = [...currentScaleInfo.notes];
+            collectedNotes = [];
+            
+            targetScaleText.textContent = currentScaleInfo.name;
+            createSlotsUI();
+        }
+
+        function createSlotsUI() {
+            collectedBar.innerHTML = '';
+            for (let i = 0; i < targetNotes.length; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'slot';
+                slot.id = `slot-${i}`;
+                collectedBar.appendChild(slot);
+            }
+            updateSlotsUI();
+        }
+
+        function updateSlotsUI() {
+            for (let i = 0; i < targetNotes.length; i++) {
+                const slot = document.getElementById(`slot-${i}`);
+                const correctNoteForSlot = targetNotes[i]; 
+                
+                if (collectedNotes.includes(correctNoteForSlot)) {
+                    slot.textContent = correctNoteForSlot;
+                    slot.classList.add('filled');
+                } else {
+                    slot.textContent = '';
+                    slot.classList.remove('filled');
+                }
+            }
+        }
+
+        function spawnNote() {
+            if (isTransitioning || isPaused) return; 
+
+            const missingNotes = targetNotes.filter(n => !collectedNotes.includes(n));
+            let noteText = "";
+            
+            if (missingNotes.length > 0 && Math.random() < 0.60) {
+                noteText = missingNotes[Math.floor(Math.random() * missingNotes.length)];
+            } else {
+                noteText = allNotes[Math.floor(Math.random() * allNotes.length)];
+            }
+
+            const noteEl = document.createElement('div');
+            noteEl.classList.add('falling-note');
+            noteEl.innerHTML = `<span>${noteText}</span>`;
+            
+            const maxLeft = gameArea.clientWidth - 55;
+            const randomX = Math.floor(Math.random() * (maxLeft - 25)) + 30;
+            noteEl.style.left = randomX + 'px';
+            noteEl.style.top = '-60px';
+            
+            gameArea.appendChild(noteEl);
+            activeNotes.push({ element: noteEl, text: noteText, y: -60, x: randomX });
+        }
+
+        function updateGame() {
+            if (!isPaused) {
+                const areaHeight = gameArea.clientHeight;
+                const glassRect = glass.getBoundingClientRect();
+                const gameRect = gameArea.getBoundingClientRect();
+
+                const glassTop = glassRect.top - gameRect.top - 10; 
+                const glassBottom = glassRect.top - gameRect.top + 20; 
+                const glassLeft = glassRect.left - gameRect.left;
+                const glassRight = glassRect.right - gameRect.left;
+
+                for (let i = 0; i < activeNotes.length; i++) {
+                    let noteObj = activeNotes[i];
+                    noteObj.y += fallSpeed;
+                    noteObj.element.style.top = noteObj.y + 'px';
+
+                    const noteRadius = 27; 
+                    const noteCenterY = noteObj.y + noteRadius;
+                    const noteCenterX = noteObj.x;
+
+                    // ตรวจจับการชน (เก็บโน้ต)
+                    if (noteCenterY >= glassTop && noteCenterY <= glassBottom) {
+                        if (noteCenterX >= glassLeft && noteCenterX <= glassRight) {
+                            handleCatch(noteObj, i);
+                            i--; 
+                            continue;
+                        }
+                    }
+
+                    // ปล่อยให้ร่วงหายไป (เช็คว่าพลาดของดีหรือไม่)
+                    if (noteObj.y > areaHeight) {
+                        const isTarget = targetNotes.includes(noteObj.text);
+                        const alreadyCollected = collectedNotes.includes(noteObj.text);
+                        
+                        // ถ้าหล่นโน้ตที่ใช่และยังไม่มี = เสียหัวใจ 1 ดวง
+                        if (isTarget && !alreadyCollected) {
+                            lives--;
+                            updateUI();
+                            playSound(errorSound);
+                            boardWrapper.classList.add('flash-red');
+                            setTimeout(() => boardWrapper.classList.remove('flash-red'), 300);
+                            
+                            if (lives <= 0) {
+                                triggerGameOver();
+                            }
+                        }
+
+                        noteObj.element.remove();
+                        activeNotes.splice(i, 1);
+                        i--;
+                    }
+                }
+            }
+            
+            gameLoopId = requestAnimationFrame(updateGame);
+        }
+
+        function handleCatch(noteObj, index) {
+            noteObj.element.remove();
+            activeNotes.splice(index, 1);
+
+            if (isTransitioning) return;
+
+            const isTarget = targetNotes.includes(noteObj.text);
+            const alreadyCollected = collectedNotes.includes(noteObj.text);
+
+            if (isTarget && !alreadyCollected) {
+                // เก็บสำเร็จ ถูกต้อง
+                playSound(popSound);
+                collectedNotes.push(noteObj.text); 
+                score += 10;
+                updateSlotsUI(); 
+
+                if (collectedNotes.length === targetNotes.length) {
+                    levelComplete();
+                }
+            } else {
+                // พลาด! (เก็บโน้ตผิด หรือโน้ตที่ซ้ำ) -> เสียหัวใจ 1 ดวง
+                playSound(errorSound);
+                boardWrapper.classList.add('flash-red');
+                glass.classList.add('shake');
+                
+                lives--;
+                updateUI();
+                
+                setTimeout(() => {
+                    boardWrapper.classList.remove('flash-red');
+                    glass.classList.remove('shake');
+                }, 300);
+
+                if (lives <= 0) {
+                    triggerGameOver();
+                }
+            }
+        }
+
+        function levelComplete() {
+            isTransitioning = true;
+            level++;
+            playSound(successSound);
+            
+            levelUpMsg.classList.add('show');
+            
+            activeNotes.forEach(n => n.element.remove());
+            activeNotes = [];
+
+            // ความยากเพิ่มขึ้นเรื่อยๆ
+            fallSpeed += 0.15; 
+            spawnRate = Math.max(800, spawnRate - 100);
+            
+            clearInterval(spawnId);
+            spawnId = setInterval(spawnNote, spawnRate);
+
+            setTimeout(() => {
+                levelUpMsg.classList.remove('show');
+                loadNewScale();
+            }, 2000);
+        }
+
+    </script>
+</body>
+</html>

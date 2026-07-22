@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Chordkupp - การเดินทางแห่งเสียงดนตรี</title>
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Mali', sans-serif; user-select: none; }
+        
+        body { 
+            background: #fdfaf6; 
+            height: 100vh; height: 100dvh; 
+            display: flex; align-items: center; justify-content: center; 
+            overflow: hidden; 
+        }
+
+        /* 📱 กรอบเกม ธีม Cozy Cafe */
+        #app-container {
+            width: 100%; max-width: 420px; 
+            height: 100%; height: 100dvh; 
+            background-color: #fffcf4;
+            background-image: 
+                linear-gradient(90deg, rgba(211, 185, 160, 0.15) 50%, transparent 50%),
+                linear-gradient(0deg, rgba(211, 185, 160, 0.15) 50%, transparent 50%);
+            background-size: 50px 50px;
+            position: relative; 
+            overflow: hidden; 
+            display: flex; flex-direction: column;
+            box-shadow: 0 15px 40px rgba(93, 64, 55, 0.2);
+            border-left: 8px solid #fff; border-right: 8px solid #fff;
+        }
+
+        /* ของตกแต่งฉากหลัง */
+        .bg-element { position: absolute; pointer-events: none; z-index: 1;}
+        .decor-1 { top: 8%; left: -5%; font-size: 4rem; opacity: 0.7; transform: rotate(-15deg); }
+        .decor-2 { top: 20%; right: -5%; font-size: 3.5rem; opacity: 0.7; transform: rotate(15deg); }
+        .decor-3 { bottom: 10%; left: 10%; font-size: 3rem; opacity: 0.5; transform: rotate(-20deg); }
+        
+        .coffee-beans {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(#d7ccc8 2px, transparent 2px);
+            background-size: 40px 40px; opacity: 0.6; z-index: 0;
+        }
+
+        /* ---------------- หน้า Start Screen ---------------- */
+        #startScreen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 100; 
+            background: linear-gradient(180deg, rgba(255,252,244,0.9) 0%, rgba(244,225,210,0.95) 100%);
+            backdrop-filter: blur(4px);
+            transition: opacity 0.5s ease;
+        }
+
+        .logo-title {
+            font-size: 3.8rem; font-weight: 900; color: #5d4037; line-height: 1.1;
+            text-align: center; margin-bottom: 20px;
+            text-shadow: -3px -3px 0 #fff, 3px -3px 0 #fff, -3px 3px 0 #fff, 3px 3px 0 #fff, 0px 8px 0px #bcaaa4;
+            transform: rotate(-2deg);
+        }
+
+        /* SVG น้องหมีบาริสต้า */
+        .barista-graphic {
+            width: 180px; height: 180px; margin-bottom: 40px; filter: drop-shadow(0 10px 10px rgba(93, 64, 55, 0.2));
+            animation: floatBarista 3s infinite ease-in-out alternate;
+        }
+        @keyframes floatBarista { 0% { transform: translateY(0px) rotate(1deg); } 100% { transform: translateY(-12px) rotate(-1deg); } }
+
+        .btn-start {
+            padding: 15px 45px; font-size: 1.8rem; font-weight: 900; color: #fff;
+            background: #ff8a65; border: 4px solid #fff; border-radius: 35px;
+            cursor: pointer; box-shadow: 0 8px 0 #d84315, 0 15px 20px rgba(93,64,55,0.2);
+            transition: 0.15s cubic-bezier(0.4, 0, 0.2, 1); -webkit-tap-highlight-color: transparent;
+        }
+        .btn-start:active { transform: translateY(8px); box-shadow: 0 0px 0 #d84315; }
+
+        /* ---------------- หน้า Map Screen ---------------- */
+        #mapScreen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; z-index: 50; overflow: hidden;
+            background: rgba(255,252,244,0.7);
+        }
+        
+        .header-map {
+            position: absolute; top: 20px; left: 20px; z-index: 100;
+        }
+        .btn-back { background: #fff; border: 3px solid #e6d8ce; padding: 10px 18px; border-radius: 20px; font-size: 1rem; font-weight: 900; color: #8d6e63; box-shadow: 0 5px 0 #e6d8ce; cursor: pointer; transition: 0.1s;}
+        .btn-back:active { transform: translateY(4px); box-shadow: 0 1px 0 #e6d8ce; }
+
+        /* ถ้วยกาแฟเป้าหมายสูงสุด */
+        .star-top { position: absolute; top: 6%; left: 50%; transform: translateX(-50%); font-size: 4.5rem; filter: drop-shadow(0 10px 10px rgba(93, 64, 55, 0.2)); animation: pulse 2s infinite alternate;}
+        @keyframes pulse { 0% { transform: translateX(-50%) scale(1); } 100% { transform: translateX(-50%) scale(1.08); } }
+
+        /* เส้นทางคดเคี้ยว (สีน้ำตาลกาแฟ) */
+        .path-svg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;
+        }
+
+        /* โหนดเลเวล */
+        .level-node {
+            position: absolute; width: 65px; height: 65px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 1.8rem; font-weight: 900; color: #fff;
+            cursor: pointer; z-index: 20; transition: transform 0.2s;
+            box-shadow: 0 6px 0 #689f38, 0 10px 15px rgba(93,64,55,0.3);
+            border: 4px solid #fff; background: #8bc34a; /* สีเขียวมัทฉะ สำหรับด่านที่ผ่านแล้ว */
+        }
+        
+        .level-node:active { transform: scale(0.9); box-shadow: 0 2px 0 #689f38; }
+
+        /* สถานะโหนด: ล็อค */
+        .level-node.locked {
+            background: #d7ccc8; color: #a1887f; border-color: #fdfaf6;
+            box-shadow: 0 6px 0 #bcaaa4; cursor: not-allowed;
+        }
+        .level-node.locked::after {
+            content: '🔒'; position: absolute; font-size: 1.4rem; bottom: -5px; right: -5px; filter: drop-shadow(0 2px 2px rgba(93,64,55,0.2));
+        }
+
+        /* สถานะโหนด: ปัจจุบัน (เลเวลถัดไปที่ต้องเล่น) */
+        .level-node.current {
+            background: #ffb74d; color: #fff; border-color: #fff;
+            box-shadow: 0 6px 0 #f57c00, 0 0 20px rgba(255, 183, 77, 0.6);
+            animation: floatNode 1.5s infinite alternate;
+        }
+        @keyframes floatNode { 0% { transform: translateY(0); } 100% { transform: translateY(-8px); } }
+
+        /* ตำแหน่งของแต่ละด่าน (ตามโค้ง SVG) */
+        #node-1 { bottom: 18%; left: 20%; } /* สเกล */
+        #node-2 { bottom: 30%; right: 25%; } /* ขั้นคู่ */
+        #node-3 { bottom: 50%; right: 15%; } /* ทรัยแอด */
+        #node-4 { bottom: 62%; left: 28%; } /* คอร์ดทบเจ็ด */
+        #node-5 { bottom: 78%; left: 25%; } /* พลิกกลับ */
+
+        /* มอเตอร์ไซค์ส่งขนม (แทนจรวด) */
+        .scooter {
+            position: absolute; bottom: 38%; left: 12%; font-size: 3.5rem; 
+            z-index: 5; animation: driveScooter 4s infinite alternate ease-in-out; pointer-events: none;
+        }
+        @keyframes driveScooter { 0% { transform: translateY(0) scaleX(-1); } 100% { transform: translateY(-15px) scaleX(-1); } }
+
+        /* ขี้โกงปุ่ม Reset (แอบซ่อนไว้มุมขวาล่างสำหรับคนสร้างเกม) */
+        .dev-reset { position: absolute; bottom: 10px; right: 10px; opacity: 0.15; font-size: 0.8rem; background: #5d4037; border: none; border-radius: 10px; padding: 5px; color: #fff; z-index: 999; cursor: pointer;}
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <!-- ฉากหลังรวมธีมคาเฟ่ -->
+        <div class="coffee-beans"></div>
+        <div class="decor-1 bg-element">🥐</div>
+        <div class="decor-2 bg-element">🍰</div>
+        <div class="decor-3 bg-element">☕</div>
+
+        <!-- หน้า 1: เริ่มเกม (ทับด้านบน) -->
+        <div id="startScreen">
+            <h1 class="logo-title">CHORD<br>KUPP</h1>
+            
+            <!-- SVG น้องหมีบาริสต้า (แทน UFO) -->
+            <svg class="barista-graphic" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <!-- หู -->
+                <circle cx="45" cy="55" r="25" fill="#8d6e63"/>
+                <circle cx="155" cy="55" r="25" fill="#8d6e63"/>
+                <circle cx="45" cy="55" r="12" fill="#e6d8ce"/>
+                <circle cx="155" cy="55" r="12" fill="#e6d8ce"/>
+                
+                <!-- หัวหมี -->
+                <circle cx="100" cy="110" r="65" fill="#8d6e63"/>
+                
+                <!-- ตา -->
+                <circle cx="75" cy="95" r="6" fill="#3e2723"/>
+                <circle cx="125" cy="95" r="6" fill="#3e2723"/>
+                
+                <!-- แก้มอมชมพู -->
+                <ellipse cx="55" cy="110" rx="9" ry="5" fill="#ffcdd2" opacity="0.9"/>
+                <ellipse cx="145" cy="110" rx="9" ry="5" fill="#ffcdd2" opacity="0.9"/>
+                
+                <!-- จมูกและปาก -->
+                <ellipse cx="100" cy="120" rx="26" ry="18" fill="#e6d8ce"/>
+                <circle cx="100" cy="112" r="7" fill="#3e2723"/>
+                <path d="M 88 126 Q 100 138 112 126" fill="none" stroke="#3e2723" stroke-width="3" stroke-linecap="round"/>
+                
+                <!-- หมวกบาริสต้า (สีเขียว) -->
+                <path d="M 60 25 L 140 25 L 125 45 L 75 45 Z" fill="#2e4233"/>
+                
+                <!-- ผ้ากันเปื้อนบาริสต้า (สีเขียว) -->
+                <path d="M 45 165 C 45 165, 100 145, 155 165 L 145 200 L 55 200 Z" fill="#2e4233"/>
+                <path d="M 85 165 L 115 165 L 115 200 L 85 200 Z" fill="#ffffff" opacity="0.2"/> <!-- สายรัด -->
+            </svg>
+
+            <button class="btn-start" onclick="openMap()">PLAY</button>
+        </div>
+
+        <!-- หน้า 2: แผนที่เลือกด่าน -->
+        <div id="mapScreen">
+            <div class="header-map">
+                <button class="btn-back" onclick="closeMap()">◀ BACK</button>
+            </div>
+            
+            <div class="star-top">🏆</div>
+            <div class="scooter">🛵</div>
+
+            <!-- เส้นทางโค้ง S สีน้ำตาลกาแฟ พร้อมรอยประด้านใน -->
+            <svg class="path-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <!-- เส้นขอบนอกสีน้ำตาล -->
+                <path d="M 25 80 C 60 80, 80 65, 70 50 C 60 30, 20 60, 35 30" 
+                      fill="none" stroke="#8d6e63" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+                <!-- เส้นประด้านในสีครีม -->
+                <path d="M 25 80 C 60 80, 80 65, 70 50 C 60 30, 20 60, 35 30" 
+                      fill="none" stroke="#fffcf4" stroke-width="4" stroke-dasharray="2, 4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+
+            <!-- โหนดแต่ละเลเวล -->
+            <div class="level-node" id="node-1" onclick="playLevel(1)">1</div>
+            <div class="level-node" id="node-2" onclick="playLevel(2)">2</div>
+            <div class="level-node" id="node-3" onclick="playLevel(3)">3</div>
+            <div class="level-node" id="node-4" onclick="playLevel(4)">4</div>
+            <div class="level-node" id="node-5" onclick="playLevel(5)">5</div>
+        </div>
+        
+        <button class="dev-reset" onclick="resetProgress()">Reset</button>
+    </div>
+
+    <script>
+        // โหลดความคืบหน้าจาก LocalStorage (ถ้าไม่มีให้เป็นด่าน 1)
+        let maxUnlocked = parseInt(localStorage.getItem('chordkupp_progress')) || 1;
+
+        function updateMap() {
+            for (let i = 1; i <= 5; i++) {
+                let node = document.getElementById(`node-${i}`);
+                node.classList.remove('locked', 'current');
+                
+                if (i > maxUnlocked) {
+                    node.classList.add('locked'); // ด่านที่ยังไม่ปลดล็อค
+                } else if (i === maxUnlocked) {
+                    node.classList.add('current'); // ด่านปัจจุบันที่ต้องเล่น
+                }
+                // ถ้า i < maxUnlocked มันจะเป็นสีเขียว (ผ่านแล้ว) โดยปริยายจาก CSS ตั้งต้น
+            }
+        }
+
+        function openMap() {
+            document.getElementById('startScreen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('startScreen').style.display = 'none';
+                document.getElementById('mapScreen').style.display = 'block';
+                updateMap(); // อัปเดตสถานะล็อคทุกครั้งที่เปิดแผนที่
+            }, 300);
+        }
+
+        function closeMap() {
+            document.getElementById('mapScreen').style.display = 'none';
+            document.getElementById('startScreen').style.display = 'flex';
+            // ดีเลย์นิดนึงให้ transition opacity ทำงานนุ่มๆ
+            setTimeout(() => {
+                document.getElementById('startScreen').style.opacity = '1';
+            }, 10);
+        }
+
+        function playLevel(levelNumber) {
+            if (levelNumber > maxUnlocked) {
+                alert('เชฟต้องผ่านด่าน ' + (levelNumber - 1) + ' ก่อนนะ! ☕');
+                return;
+            }
+            // เชื่อมโยงไปยังไฟล์ HTML ของเกมต่างๆ 
+            window.location.href = `level${levelNumber}.html`;
+        }
+
+        // ฟังก์ชันสำหรับผู้พัฒนา เคลียร์เซฟกลับไปเริ่มด่าน 1
+        function resetProgress() {
+            localStorage.setItem('chordkupp_progress', 1);
+            maxUnlocked = 1;
+            updateMap();
+            alert('ล้างข้อมูล! กลับไปเริ่มด่าน 1 ใหม่ 🧹');
+        }
+
+        // รันอัปเดตแมพตอนโหลดหน้าเว็บทันที
+        updateMap();
+    </script>
+</body>
+</html>

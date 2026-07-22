@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Cozy Kaiten Chord - ซูชิสายพานคอร์ด</title>
+    <link href="https://fonts.googleapis.com/css2?family=Mali:wght@500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Mali', sans-serif; user-select: none; }
+        
+        /* 🤎 พื้นหลังหน้าจอด้านนอก ลายจุด (Polka Dot) ละมุนๆ */
+        body { 
+            background-color: #fdfaf6;
+            background-image: radial-gradient(#d7ccc8 15%, transparent 16%), 
+                              radial-gradient(#d7ccc8 15%, transparent 16%);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            color: #5d4037; 
+            height: 100vh; height: 100dvh; 
+            display: flex; align-items: center; justify-content: center; 
+            overflow: hidden; touch-action: none;
+        }
+
+        /* 📱 กรอบร้านซูชิสไตล์ Cozy */
+        #app-container {
+            width: 100%; max-width: 420px; 
+            height: 100%; height: 100dvh; 
+            background-color: #fffcf4;
+            background-image: 
+                linear-gradient(90deg, rgba(186, 156, 133, 0.15) 50%, transparent 50%),
+                linear-gradient(0deg, rgba(186, 156, 133, 0.15) 50%, transparent 50%);
+            background-size: 40px 40px;
+            border-radius: 35px; border: 8px solid #fff;
+            box-shadow: 0 20px 50px rgba(93, 64, 55, 0.4);
+            position: relative; 
+            overflow: hidden; 
+            display: flex; flex-direction: column;
+        }
+
+        .screen { 
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start; 
+            width: 100%; height: 100%; padding: 25px 20px; z-index: 10; 
+        }
+
+        /* ---------------- 🏠 หน้า Lobby ---------------- */
+        .lobby-header { width: 100%; flex-shrink: 0; text-align: center; }
+
+        .game-logo {
+            background: #fff; border-radius: 30px;
+            padding: 15px 25px; font-size: 2.2rem; color: #ff8a65; margin-bottom: 20px;
+            font-weight: 900; text-align: center; 
+            box-shadow: 0 8px 0 #ffe0b2, 0 15px 20px rgba(93, 64, 55, 0.1);
+            display: inline-block; 
+        }
+
+        /* กล่องคำแนะนำก่อนเริ่มเกม (Start Instruction Box) */
+        .start-instruction-box {
+            background: rgba(255, 255, 255, 0.95); padding: 22px 18px; 
+            border-radius: 25px; width: 100%; text-align: center; margin-bottom: 25px;
+            box-shadow: 0 8px 0 #f4e1d2, 0 10px 15px rgba(93, 64, 55, 0.05);
+            border: 3px dashed #ff8a65;
+        }
+
+        /* กลุ่มปุ่มแนวตั้งแบบเยลลี่ */
+        .btn-group-vertical { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 280px; margin: 0 auto; }
+        
+        .btn-action {
+            padding: 16px; font-size: 1.3rem; font-weight: 900; color: #fff;
+            background: #ff8a65; border: none; border-radius: 30px;
+            cursor: pointer; box-shadow: 0 8px 0 #d84315, 0 15px 20px rgba(216, 67, 21, 0.2); transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1); width: 100%;
+        }
+        .btn-action:active { transform: translateY(8px); box-shadow: 0 0px 0 transparent; }
+        
+        .btn-secondary {
+            background: #fff; color: #ff8a65;
+            box-shadow: 0 8px 0 #ffe0b2, 0 15px 20px rgba(93, 64, 55, 0.1);
+            font-size: 1.15rem;
+        }
+
+        /* ---------------- หน้ากากเมนู (Overlay Modal) ---------------- */
+        .overlay-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(244, 235, 226, 0.95); z-index: 1000; display: none;
+            flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(8px); text-align: center; padding: 20px;
+        }
+        .overlay-title { font-size: 2.2rem; color: #ff8a65; font-weight: 900; margin-bottom: 15px; text-shadow: 0px 3px 0px #fff; line-height: 1.2;}
+        
+        /* ---------------- 📖 กล่องคู่มือการเล่น (How to Play Modal) ---------------- */
+        /* ปรับพื้นหลังให้โปร่งแสงเพื่อเห็นหน้า Lobby แบบเบลอๆ */
+        .how-to-overlay { background: rgba(58, 42, 34, 0.85); z-index: 1200; }
+        .guide-modal { position: relative; width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; }
+        .guide-header { width: 100%; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .guide-title { font-size: 2.2rem; color: #aed581; font-weight: 900; text-shadow: 0 3px 0 #33691e; }
+
+        .btn-close-x {
+            width: 45px; height: 45px; background: #ff5252; border: 3px solid #fff; border-radius: 50%;
+            color: #fff; font-size: 1.5rem; font-weight: 900; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4); transition: 0.1s; -webkit-tap-highlight-color: transparent;
+        }
+        .btn-close-x:active { transform: scale(0.9); }
+
+        /* แผ่นแผนภาพวาดคำอธิบายวิธีเล่น จัดเรียงแบบ Flex ไม่ให้ทับซ้อน */
+        .guide-diagram-canvas {
+            width: 100%; height: 500px; position: relative; overflow-y: auto; overflow-x: hidden;
+            background: rgba(0,0,0,0.25); border-radius: 20px; padding: 20px 15px;
+            border: 2px dashed rgba(255,255,255,0.2); display: flex; flex-direction: column; align-items: center; gap: 15px;
+        }
+        .guide-diagram-canvas::-webkit-scrollbar { width: 0; } 
+
+        .demo-sushi-plate {
+            width: 110px; height: 90px; background: #fff;
+            border: 6px solid #ffccbc; border-radius: 50%;
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.05), 0 10px 15px rgba(0,0,0,0.3);
+            display: flex; justify-content: center; align-items: center; position: relative;
+            flex-shrink: 0;
+        }
+
+        .demo-answer-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%;
+            background: #fff; padding: 15px; border-radius: 25px; box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            flex-shrink: 0;
+        }
+        
+        .demo-btn-ans { 
+            padding: 12px 2px; font-size: 0.95rem; font-weight: 900; color: #5d4037; 
+            background: #fffcf4; border: none; border-radius: 15px; 
+            box-shadow: 0 6px 0 #ffe0b2; display: flex; flex-direction: column; align-items: center; line-height: 1.2;
+        }
+        .demo-btn-ans span { font-size: 0.7rem; color: #ff8a65; font-weight: 700; }
+
+        .chalk-text { color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.8); font-weight: 700; line-height: 1.4; text-align: center; width: 100%; font-size: 1.05rem; }
+        .down-arrow { width: 40px; height: 40px; margin: -5px 0; opacity: 0.9; flex-shrink: 0; }
+
+        /* ---------------- 📖 หน้าต่างป๊อปอัปทบทวนเมนู ---------------- */
+        .review-box {
+            background: #fff; padding: 20px; 
+            border-radius: 25px; width: 100%; text-align: left; margin-bottom: 25px;
+            box-shadow: 0 10px 0 #f4e1d2, 0 20px 25px rgba(93, 64, 55, 0.1);
+            max-height: 60vh; overflow-y: auto;
+        }
+        .review-box::-webkit-scrollbar { width: 6px; }
+        .review-box::-webkit-scrollbar-thumb { background: #ff8a65; border-radius: 10px; }
+
+        .chord-info { margin-bottom: 12px; font-size: 0.95rem; padding: 15px; border-radius: 16px; background: #fffcf4; border: 2px dashed #ffccbc; }
+        .chord-title { font-weight: 900; color: #d84315; font-size: 1.1rem;}
+        .chord-formula { color: #ff8a65; font-weight: bold; display: block; margin-top: 5px; }
+
+        /* ---------------- 🍣 หน้าจอเล่นเกมหลัก ---------------- */
+        #gameWrapper { justify-content: space-between; padding: 15px 15px; display: none; flex-direction: column;}
+        
+        .game-header { width: 100%; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 0 15px 0; z-index: 30;}
+        .score-board { font-size: 1.1rem; padding: 8px 16px; background: #fff; color: #ff8a65; border-radius: 20px; font-weight: 900; box-shadow: 0 6px 0 #ffe0b2; }
+        .lives-board { font-size: 1.4rem; filter: drop-shadow(0 4px 2px rgba(0,0,0,0.1)); letter-spacing: 2px;}
+
+        .btn-pause {
+            width: 45px; height: 45px; background: #fff; border: none;
+            border-radius: 15px; font-size: 1.3rem; font-weight: 900; color: #ff8a65;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 6px 0 #ffe0b2; transition: 0.15s cubic-bezier(0.4, 0, 0.2, 1); -webkit-tap-highlight-color: transparent;
+        }
+        .btn-pause:active { transform: translateY(6px); box-shadow: 0 0px 0 transparent; }
+
+        /* 👨‍🍳 โซนตัวละครใหญ่อยู่ตรงกลาง (ขยับขึ้นบนเพื่อให้เห็นชัดเจนในมือถือ) */
+        .character-center-zone {
+            position: absolute; top: 10%; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; z-index: 5;
+        }
+        .chef-img { 
+            width: 180px; height: 180px; 
+            filter: drop-shadow(0 15px 15px rgba(93, 64, 55, 0.2));
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: breathe 3s infinite alternate ease-in-out;
+        }
+        @keyframes breathe { 0% { transform: scale(1) translateY(0); } 100% { transform: scale(1.02) translateY(-5px); } }
+        
+        .hint-bubble {
+            background: #fff; border-radius: 20px;
+            padding: 8px 16px; font-weight: 900; color: #d84315; font-size: 1.1rem;
+            box-shadow: 0 8px 0 #ffe0b2; margin-bottom: 5px; text-align: center;
+            animation: float 2s infinite alternate ease-in-out;
+        }
+        @keyframes float { 0% { transform: translateY(0); } 100% { transform: translateY(-8px); } }
+
+        /* พื้นที่สายพานซูชิ */
+        .belt-zone {
+            position: absolute; bottom: 35%; left: 0; width: 100%; height: 120px;
+            display: flex; align-items: center; z-index: 10;
+        }
+        .belt-track {
+            position: absolute; width: 200%; height: 100%; background: #e6ccb2;
+            border-top: 6px solid #d4a373; border-bottom: 10px solid #b37e4c;
+            box-shadow: inset 0 10px 15px rgba(0,0,0,0.05), 0 10px 20px rgba(93, 64, 55, 0.2);
+            background-image: repeating-linear-gradient(90deg, transparent, transparent 50px, rgba(255,255,255,0.2) 50px, rgba(255,255,255,0.2) 55px);
+        }
+        .target-scanner {
+            position: absolute; left: 15%; top: 5%; width: 120px; height: 90%;
+            border: 5px solid rgba(255, 138, 101, 0.8); border-radius: 20px; z-index: 15;
+            pointer-events: none; background: linear-gradient(to bottom, rgba(255, 138, 101, 0.1), transparent);
+        }
+
+        /* 🍽️ จานซูชิบนสายพาน */
+        .sushi-plate {
+            position: absolute; width: 105px; height: 85px; background: #fff;
+            border: 6px solid #ffccbc; border-radius: 50%; top: 15%;
+            box-shadow: inset -5px -5px 15px rgba(0,0,0,0.05), 0 10px 15px rgba(93, 64, 55, 0.3);
+            display: flex; justify-content: center; align-items: center; z-index: 10;
+        }
+
+        .mini-staff { width: 85%; height: 50px; position: relative; margin-top: -5px; }
+        .mini-line { width: 100%; height: 2px; background: #d4a373; position: absolute; opacity: 0.8; border-radius: 2px;}
+        .m-line-1 { bottom: 10px; } .m-line-2 { bottom: 18px; } .m-line-3 { bottom: 26px; } .m-line-4 { bottom: 34px; } .m-line-5 { bottom: 42px; }
+
+        /* กุญแจซอลในจานซูชิ */
+        .mini-clef-svg {
+            position: absolute; 
+            left: -12px; 
+            bottom: -16px; 
+            width: 45px; 
+            height: 80px; 
+            pointer-events: none; z-index: 2; opacity: 0.9;
+        }
+
+        .mini-note {
+            position: absolute; width: 12px; height: 10px; background: #5d4037;
+            border-radius: 50%; transform: rotate(-15deg); margin-left: -6px; margin-bottom: -5px;
+        }
+        .mini-ledger {
+            position: absolute; width: 22px; height: 2px; background: #5d4037; border-radius: 2px;
+            left: 50%; top: 50%; transform: translate(-50%, -50%);
+        }
+
+        /* 📌 แผงปุ่มตอบ ยึดติดล่างสุด ดีไซน์ Cozy โค้งมน */
+        .answer-zone {
+            position: absolute; bottom: 0; left: 0;
+            width: 100%; display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; 
+            padding: 25px 20px calc(25px + env(safe-area-inset-bottom)) 20px; 
+            background: #fff; border-radius: 40px 40px 0 0; 
+            box-shadow: 0 -10px 30px rgba(93, 64, 55, 0.1); z-index: 30;
+        }
+
+        .btn-ans { 
+            padding: 16px 5px; font-size: 1.15rem; font-weight: 900; color: #5d4037; 
+            background: #fffcf4; border: none; border-radius: 20px; 
+            cursor: pointer; transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1); -webkit-tap-highlight-color: transparent;
+            box-shadow: 0 8px 0 #ffe0b2, 0 10px 10px rgba(93, 64, 55, 0.05);
+            display: flex; flex-direction: column; align-items: center; line-height: 1.2;
+        }
+        .btn-ans span { font-size: 0.85rem; color: #ff8a65; font-weight: 700; }
+        .btn-ans:active { transform: translateY(8px); box-shadow: 0 0px 0 transparent; }
+        
+        .btn-ans.flash-green { background: #c8e6c9; color: #2e7d32; box-shadow: 0 8px 0 #81c784; }
+        .btn-ans.flash-red { background: #ffcdd2; color: #c62828; box-shadow: 0 8px 0 #e57373; }
+
+        .feedback { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.2s;}
+        .feedback.show { opacity: 1; animation: popFeedback 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popFeedback { 0% { transform: translate(-50%, -30%) scale(0.5); } 100% { transform: translate(-50%, -50%) scale(1); } }
+
+        /* ---------------- Level Up Animation ---------------- */
+        .level-up-overlay {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            font-size: 4rem; font-weight: 900; color: #ff8a65; text-shadow: 0 6px 0 #fff;
+            z-index: 500; pointer-events: none; opacity: 0; white-space: nowrap;
+        }
+        .level-up-overlay.show { animation: smashText 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes smashText { 
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; } 
+            20% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; } 
+            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; } 
+            100% { transform: translate(-50%, -80%) scale(0); opacity: 0; } 
+        }
+
+        /* ---------------- 💀 หน้าจอจบเกมส์ ---------------- */
+        #gameOverScreen { justify-content: center; display: none; }
+        .go-box { background: #fff; padding: 30px 25px; border-radius: 35px; box-shadow: 0 10px 0 #f4e1d2, 0 20px 40px rgba(93, 64, 55, 0.15); width: 100%; text-align: center; }
+        .go-box h2 { font-size: 2.2rem; color: #ff8a65; margin-bottom: 20px; font-weight: 900; }
+        .result-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; background: #fdfaf6; border-radius: 20px; overflow: hidden; border: 3px dashed #ffccbc;}
+        .result-table td { padding: 15px; border-bottom: 2px dashed #ffccbc; font-size: 1.1rem; }
+        .result-table td:first-child { text-align: left; color: #795548; font-weight: bold; }
+        .result-table td:last-child { text-align: right; font-weight: 900; color: #d84315; font-size: 1.5rem;}
+
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <div id="warmOverlay"></div>
+
+        <!-- 🏠 หน้า Lobby (เริ่มเกม & ทบทวน) - เซ็ตให้แสดงอยู่ด้านหลังและถูกเบลอทับ -->
+        <div id="setupScreen" class="screen" style="display: flex;">
+            <div class="lobby-header">
+                <!-- ป้ายโลโก้เกม -->
+                <div class="game-logo">Sushi Inversion 🍣</div>
+                
+                <!-- กล่องคำแนะนำก่อนเริ่มเกม -->
+                <div class="start-instruction-box">
+                    <p style="font-size: 1.3rem; color: #d84315; font-weight: 900; line-height: 1.5; margin-bottom:10px;">
+                        🍣 พร้อมเสิร์ฟหรือยังเชฟ?
+                    </p>
+                    <p style="font-size: 0.95rem; color: #795548; font-weight: 700;">จำให้แม่น! โครงสร้างการพลิกกลับของคอร์ดแต่ละท่า</p>
+                    <p style="font-size: 0.85rem; color: #ff8a65; font-weight: 700; margin-top: 10px;">
+                        ถ้ายังไม่แม่น แวะอ่านเมนูทบทวนก่อนได้นะ
+                    </p>
+                </div>
+
+                <div class="btn-group-vertical">
+                    <button class="btn-action" onclick="startGame()">เลือกเมนูเริ่มเกม 🍣</button>
+                    <button class="btn-action btn-secondary" onclick="openReview()">ทบทวนเรื่องพลิกกลับ 📖</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📖 หน้าต่างคู่มือการเล่น (How to Play) - แสดงเป็นหน้าแรกสุดซ้อนทับ Lobby -->
+        <div id="howToPlayScreen" class="overlay-screen how-to-overlay" style="display: flex;">
+            <div class="guide-modal">
+                <div class="guide-header">
+                    <span class="guide-title">คู่มือการเล่น</span>
+                    <!-- กากบาทกดแล้วไปหน้า Lobby -->
+                    <button class="btn-close-x" onclick="closeHowToPlay()">✕</button>
+                </div>
+
+                <!-- แผ่นวาดภาพจำลองวิธีเล่น (จัดเรียงบนลงล่าง ไม่ให้ทับซ้อน) -->
+                <div class="guide-diagram-canvas">
+                    
+                    <!-- 1. จานซูชิ -->
+                    <div class="demo-sushi-plate">
+                        <div class="mini-staff" style="width: 80%; margin-top: -5px;">
+                            <svg class="mini-clef-svg" viewBox="0 0 100 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+                                <text x="8" y="155" font-family="'Times New Roman', Georgia, serif" font-size="140" fill="#d4a373">&#119070;</text>
+                            </svg>
+                            <div class="mini-line m-line-1"></div>
+                            <div class="mini-line m-line-2"></div>
+                            <div class="mini-line m-line-3"></div>
+                            <div class="mini-line m-line-4"></div>
+                            <div class="mini-line m-line-5"></div>
+                            <!-- โน้ตจำลอง (E, G, C) -->
+                            <div class="mini-note" style="bottom: 10px; left: 45%;"></div>
+                            <div class="mini-note" style="bottom: 18px; left: 45%;"></div>
+                            <div class="mini-note" style="bottom: 30px; left: 45%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="chalk-text">
+                        สังเกตจานซูชิบนสายพาน (โน้ต 3 หรือ 4 ตัว)<br>
+                        และวิเคราะห์ว่าเป็นคอร์ดใน <span style="color:#aed581;">ท่าพลิกกลับใด</span>
+                    </div>
+
+                    <!-- ลูกศรชี้ลง -->
+                    <svg class="down-arrow" viewBox="0 0 24 24" fill="none" stroke="#aed581" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="2" x2="12" y2="22"></line>
+                        <polyline points="19 15 12 22 5 15"></polyline>
+                    </svg>
+
+                    <!-- 2. แผงปุ่มกด -->
+                    <div class="demo-answer-grid">
+                        <div class="demo-btn-ans">ท่าพื้นต้น<br><span>(Root)</span></div>
+                        <div class="demo-btn-ans">พลิกกลับ 1<br><span>(1st Inversion)</span></div>
+                        <div class="demo-btn-ans">พลิกกลับ 2<br><span>(2nd Inversion)</span></div>
+                        <div class="demo-btn-ans">พลิกกลับ 3<br><span>(เฉพาะคอร์ด 7)</span></div>
+                    </div>
+
+                    <div class="chalk-text">
+                        กดปุ่มด้านล่างให้ถูกต้องก่อนซูชิจะร่วง!
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- 📖 หน้าต่างทบทวนเมนู -->
+        <div id="reviewScreen" class="overlay-screen">
+            <h1 class="overlay-title">📖 การพลิกกลับคอร์ด</h1>
+            
+            <div class="review-box">
+                <p style="text-align: center; color: #795548; font-weight: 700; margin-bottom: 15px;"><b>Chord Inversions</b><br>คือการสลับตำแหน่งโน้ตในคอร์ด โดยเปลี่ยนโน้ตที่อยู่ต่ำสุด (Bass) เป็นตัวอื่น</p>
+                
+                <div class="chord-info">
+                    <span class="chord-title">🌱 ท่าพื้นต้น (Root Position)</span>
+                    <span class="chord-formula">โน้ตตัวที่ 1 (Root) อยู่ต่ำสุด<br>ตัวอย่าง: C - E - G</span>
+                </div>
+                <div class="chord-info">
+                    <span class="chord-title">🔄 พลิกกลับครั้งที่ 1 (1st Inversion)</span>
+                    <span class="chord-formula">โน้ตตัวที่ 3 อยู่ต่ำสุด<br>ตัวอย่าง: E - G - C</span>
+                </div>
+                <div class="chord-info">
+                    <span class="chord-title">🔄 พลิกกลับครั้งที่ 2 (2nd Inversion)</span>
+                    <span class="chord-formula">โน้ตตัวที่ 5 อยู่ต่ำสุด<br>ตัวอย่าง: G - C - E</span>
+                </div>
+                <div class="chord-info">
+                    <span class="chord-title">✨ พลิกกลับครั้งที่ 3 (3rd Inversion)</span>
+                    <span class="chord-formula">โน้ตตัวที่ 7 อยู่ต่ำสุด<br>*(มีเฉพาะในคอร์ดทบเจ็ด 7th Chords)*<br>ตัวอย่าง: B - C - E - G</span>
+                </div>
+            </div>
+            
+            <button class="btn-action btn-secondary" style="max-width: 200px;" onclick="closeReview()">เข้าใจแล้ว! ❌</button>
+        </div>
+
+        <!-- ⏸️ หน้าต่างหยุดเกม -->
+        <div id="pauseScreen" class="overlay-screen">
+            <h1 class="overlay-title" style="color: #fff;">พักผ่อน 🍵</h1>
+            <div class="btn-group-vertical">
+                <button class="btn-action" onclick="resumeGame()">▶ ลุยงานต่อ</button>
+                <button class="btn-action btn-secondary" onclick="openReviewFromPause()">ทบทวนบทเรียน 📖</button>
+                <button class="btn-action" style="background:#fff; color:#e57373; box-shadow: 0 8px 0 #ffcdd2;" onclick="backToStartScreen()">🔄 กลับหน้าร้าน</button>
+            </div>
+        </div>
+
+        <!-- 🍣 หน้าจอเล่นเกมหลัก -->
+        <div id="gameWrapper" class="screen" style="padding: 15px 15px;">
+            <div class="game-header">
+                <div class="score-board">SCORE: <span id="scoreDisplay">0</span></div>
+                <button class="btn-pause" onclick="pauseGame()">⏸</button>
+                <div class="lives-board" id="livesDisplay">❤️❤️❤️</div>
+            </div>
+
+            <div class="character-center-zone">
+                <div class="hint-bubble" id="chefBubble">สู้ๆ นะ!</div>
+                
+                <svg class="chef-img" id="chefFace" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                    <!-- เสื้อเชฟ -->
+                    <path d="M 25 115 C 25 85, 95 85, 95 115" fill="#ffffff" stroke="#d7ccc8" stroke-width="3"/>
+                    <!-- ผ้าพันคอสีส้มอบอุ่น -->
+                    <path d="M 45 95 Q 60 105 75 95 L 60 115 Z" fill="#ff8a65"/>
+
+                    <!-- หู -->
+                    <circle cx="32" cy="65" r="7" fill="#fae5d3"/>
+                    <circle cx="88" cy="65" r="7" fill="#fae5d3"/>
+
+                    <!-- ใบหน้า -->
+                    <rect x="35" y="45" width="50" height="52" rx="20" fill="#fae5d3"/>
+                    
+                    <!-- ผมดำสไตล์ผู้ชาย -->
+                    <path d="M 32 55 Q 35 30 60 30 Q 85 30 88 55 Q 75 38 60 45 Q 45 38 32 55 Z" fill="#212121"/>
+                    <path d="M 32 55 L 32 65 L 38 60 Z" fill="#212121"/>
+                    <path d="M 88 55 L 88 65 L 82 60 Z" fill="#212121"/>
+                    
+                    <!-- หมวกเชฟ -->
+                    <path d="M 38 40 L 38 25 C 25 25, 25 5, 45 10 C 50 -5, 70 -5, 75 10 C 95 5, 95 25, 82 25 L 82 40 Z" fill="#ffffff" stroke="#f4e1d2" stroke-width="3"/>
+                    <rect x="38" y="32" width="44" height="10" rx="4" fill="#ffffff" stroke="#f4e1d2" stroke-width="3"/>
+
+                    <!-- แว่นตา -->
+                    <rect x="37" y="56" width="19" height="12" rx="2" fill="rgba(255,255,255,0.4)" stroke="#3e2723" stroke-width="2.5"/>
+                    <rect x="64" y="56" width="19" height="12" rx="2" fill="rgba(255,255,255,0.4)" stroke="#3e2723" stroke-width="2.5"/>
+                    <line x1="56" y1="62" x2="64" y2="62" stroke="#3e2723" stroke-width="2.5"/>
+                    <line x1="30" y1="60" x2="37" y2="60" stroke="#3e2723" stroke-width="2.5"/>
+                    <line x1="83" y1="60" x2="90" y2="60" stroke="#3e2723" stroke-width="2.5"/>
+
+                    <!-- ตา -->
+                    <circle cx="47" cy="62" r="2.5" fill="#3e2723"/>
+                    <circle cx="73" cy="62" r="2.5" fill="#3e2723"/>
+
+                    <!-- แก้ม -->
+                    <ellipse cx="42" cy="73" rx="4.5" ry="2.5" fill="#ffcdd2" opacity="0.9"/>
+                    <ellipse cx="78" cy="73" rx="4.5" ry="2.5" fill="#ffcdd2" opacity="0.9"/>
+
+                    <!-- ปาก -->
+                    <path id="mouthPath" d="M 54 78 Q 60 82 66 78" fill="none" stroke="#3e2723" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+
+            </div>
+
+            <div id="feedbackText" class="feedback"></div>
+            <div id="levelUpFX" class="level-up-overlay">LEVEL UP!</div>
+
+            <!-- สายพาน -->
+            <div class="belt-zone" id="beltZone">
+                <div class="belt-track" id="beltTrack"></div>
+                <div class="target-scanner"></div>
+            </div>
+
+            <!-- แผงปุ่มกด -->
+            <div class="answer-zone">
+                <button class="btn-ans" onclick="checkAnswer('root', this)">ท่าพื้นต้น<br><span>(Root)</span></button>
+                <button class="btn-ans" onclick="checkAnswer('1st', this)">พลิกกลับ 1<br><span>(1st Inversion)</span></button>
+                <button class="btn-ans" onclick="checkAnswer('2nd', this)">พลิกกลับ 2<br><span>(2nd Inversion)</span></button>
+                <button class="btn-ans" onclick="checkAnswer('3rd', this)">พลิกกลับ 3<br><span>(เฉพาะคอร์ด 7)</span></button>
+            </div>
+        </div>
+
+        <!-- 💀 หน้าจอจบเกมส์ -->
+        <div id="gameOverScreen" class="screen">
+            <div class="go-box">
+                <h2>จบเกม! 🥺</h2>
+                <table class="result-table">
+                    <tr><td>คะแนนรวม</td><td><span id="finalScore">0</span></td></tr>
+                    <tr><td colspan="2" style="text-align: center;"><span style="font-size:1rem; color:#795548;">รอดถึง</span><br><span id="finalLevel" style="font-size: 1.4rem; color: #d84315; font-weight: 900;">LEVEL 1</span></td></tr>
+                </table>
+                <button class="btn-action" onclick="backToStartScreen()">กลับหน้าหลัก 🌸</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ---------------- 🎵 ระบบคลังเสียง ----------------
+        const popSound = new Audio('https://assets.mixkit.co/active_storage/sfx/1114/1114-preview.mp3'); 
+        const errorSound = new Audio('https://assets.mixkit.co/active_storage/sfx/314/314-preview.mp3');
+        const successSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3'); 
+        const levelUpSound = new Audio('https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3');
+
+        function playSound(audio) { 
+            audio.currentTime = 0; 
+            audio.volume = 0.4;
+            audio.play().catch(e => console.log("Sound error")); 
+        }
+
+        // ---------------- 👨‍🍳 ระบบเปลี่ยนอารมณ์เชฟ SVG ----------------
+        function setChefEmotion(emotion) {
+            const mouth = document.getElementById('mouthPath');
+            if (emotion === 'normal') {
+                mouth.setAttribute('d', 'M 54 78 Q 60 82 66 78'); 
+                mouth.setAttribute('fill', 'none');
+            } else if (emotion === 'happy') {
+                mouth.setAttribute('d', 'M 53 76 Q 60 86 67 76 Z'); 
+                mouth.setAttribute('fill', '#e57373');
+            } else if (emotion === 'angry') {
+                mouth.setAttribute('d', 'M 54 82 Q 60 76 66 82'); 
+                mouth.setAttribute('fill', 'none');
+            } else if (emotion === 'shocked') {
+                mouth.setAttribute('d', 'M 57 76 C 57 72, 63 72, 63 76 C 63 80, 57 80, 57 76 Z'); 
+                mouth.setAttribute('fill', '#3e2723');
+            }
+        }
+
+        // ---------------- 📚 ฐานข้อมูลโจทย์ Inversion ----------------
+        const chordBank = [
+            { type: "root", notes: [0, 2, 4] }, { type: "root", notes: [3, 5, 7] },
+            { type: "1st", notes: [2, 4, 7] }, { type: "1st", notes: [5, 7, 10] },
+            { type: "2nd", notes: [4, 7, 9] }, { type: "2nd", notes: [7, 10, 12] },
+            { type: "root", notes: [0, 2, 4, 6] }, { type: "root", notes: [4, 6, 8, 10] },
+            { type: "1st", notes: [2, 4, 6, 7] }, { type: "1st", notes: [6, 8, 10, 11] },
+            { type: "2nd", notes: [4, 6, 7, 9] }, { type: "2nd", notes: [1, 3, 4, 6] },
+            { type: "3rd", notes: [-1, 0, 2, 4] }, { type: "3rd", notes: [3, 4, 6, 8] }
+        ];
+
+        // ---------------- ⚙️ ตัวแปรควบคุมเกม ----------------
+        let score = 0;
+        let lives = 3;
+        let level = 1;
+        let correctSinceLevelUp = 0; 
+        let gameActive = false;
+        let isPaused = false;
+        
+        let plates = []; 
+        let spawnTimer = 0;
+        let baseSpeed = 0.25; 
+        let currentSpeed = baseSpeed; 
+        let spawnInterval = 350; 
+
+        const beltZone = document.getElementById('beltZone');
+        const beltTrack = document.getElementById('beltTrack');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const livesDisplay = document.getElementById('livesDisplay');
+        const levelDisplay = document.getElementById('finalLevel');
+        const levelUpFX = document.getElementById('levelUpFX');
+        const chefFace = document.getElementById('chefFace');
+        const chefBubble = document.getElementById('chefBubble');
+        const feedbackText = document.getElementById('feedbackText');
+
+        const screens = {
+            howTo: document.getElementById('howToPlayScreen'),
+            start: document.getElementById('setupScreen'),
+            gameover: document.getElementById('gameOverScreen'),
+            pause: document.getElementById('pauseScreen'),
+            review: document.getElementById('reviewScreen'),
+            game: document.getElementById('gameWrapper')
+        };
+
+        function hideAllScreens() { Object.values(screens).forEach(s => s.style.display = 'none'); }
+
+        // ---------------- 📖 ฟังก์ชันปิดหน้าต่างคู่มือ ----------------
+        function closeHowToPlay() {
+            playSound(popSound);
+            hideAllScreens();
+            screens.start.style.display = 'flex';
+        }
+
+        // 📖 ฟังก์ชัน Review Menu
+        function openReview() {
+            playSound(popSound);
+            hideAllScreens();
+            screens.review.style.display = 'flex';
+        }
+        function openReviewFromPause() {
+            playSound(popSound);
+            screens.pause.style.display = 'none';
+            screens.review.style.display = 'flex';
+        }
+        function closeReview() {
+            playSound(popSound);
+            hideAllScreens();
+            if(isPaused) {
+                screens.pause.style.display = 'flex';
+            } else {
+                screens.start.style.display = 'flex';
+            }
+        }
+
+        // เริ่มเกม
+        function startGame() {
+            playSound(popSound);
+            hideAllScreens();
+            screens.game.style.display = 'flex';
+            
+            plates.forEach(p => p.el.remove());
+            plates = [];
+            
+            score = 0; lives = 3; level = 1; correctSinceLevelUp = 0;
+            currentSpeed = baseSpeed; spawnInterval = 350; 
+            beltTrack.style.animationDuration = '6s'; 
+            isPaused = false;
+
+            updateUI();
+            
+            setChefEmotion('normal'); 
+            chefFace.style.transform = "scaleX(1) scale(1)";
+            chefBubble.textContent = "จานแรกมาแล้วนะ!";
+            
+            gameActive = true;
+            spawnTimer = spawnInterval - 50; 
+            requestAnimationFrame(gameLoop);
+        }
+
+        function pauseGame() {
+            if (!gameActive || isPaused) return;
+            isPaused = true;
+            playSound(popSound);
+            screens.pause.style.display = 'flex';
+        }
+
+        function resumeGame() {
+            isPaused = false;
+            playSound(popSound);
+            screens.pause.style.display = 'none';
+        }
+
+        function backToStartScreen() {
+            playSound(popSound);
+            isPaused = false;
+            gameActive = false;
+            hideAllScreens();
+            screens.start.style.display = 'flex';
+        }
+
+        function updateUI() {
+            scoreDisplay.textContent = score;
+            livesDisplay.textContent = "❤️".repeat(lives) + "🤍".repeat(3 - lives);
+        }
+
+        function triggerLevelUp() {
+            level++;
+            correctSinceLevelUp = 0;
+            playSound(levelUpSound);
+            
+            currentSpeed += 0.1; 
+            if (spawnInterval > 100) spawnInterval -= 30; 
+            
+            let trackAnimSpeed = Math.max(1, 6 - (level * 0.8));
+            beltTrack.style.animationDuration = `${trackAnimSpeed}s`;
+
+            levelUpFX.classList.remove('show');
+            void levelUpFX.offsetWidth;
+            levelUpFX.textContent = `LEVEL ${level}!`;
+            levelUpFX.classList.add('show');
+            
+            setChefEmotion('happy');
+            chefBubble.textContent = "เยี่ยม! เร็วขึ้นแล้วนะ";
+        }
+
+        function spawnPlate() {
+            let q = chordBank[Math.floor(Math.random() * chordBank.length)];
+            
+            let plateEl = document.createElement('div');
+            plateEl.className = 'sushi-plate';
+            plateEl.style.left = '110%'; 
+            
+            let staffHTML = `
+                <div class="mini-staff">
+                    <svg class="mini-clef-svg" viewBox="0 0 100 200" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+                        <text x="8" y="155" font-family="'Times New Roman', Georgia, serif" font-size="140" fill="#d4a373">&#119070;</text>
+                    </svg>
+                    <div class="mini-line m-line-1"></div>
+                    <div class="mini-line m-line-2"></div>
+                    <div class="mini-line m-line-3"></div>
+                    <div class="mini-line m-line-4"></div>
+                    <div class="mini-line m-line-5"></div>
+            `;
+            
+            q.notes.forEach((pos, idx) => {
+                let bottomPx = 10 + (pos * 4); 
+                let leftPx = 42; 
+                if (idx > 0 && pos - q.notes[idx-1] === 1) leftPx += 15;
+                let ledger = (pos <= 0 || pos >= 12) ? `<div class="mini-ledger"></div>` : '';
+                staffHTML += `<div class="mini-note" style="bottom:${bottomPx}px; left:${leftPx}%;">${ledger}</div>`;
+            });
+            
+            staffHTML += `</div>`;
+            plateEl.innerHTML = staffHTML;
+            beltZone.appendChild(plateEl);
+            
+            plates.push({ el: plateEl, x: 110, type: q.type });
+        }
+
+        function gameLoop() {
+            if (!gameActive) return;
+            if (isPaused) {
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+
+            spawnTimer++;
+            if (spawnTimer >= spawnInterval) {
+                spawnPlate();
+                spawnTimer = 0;
+            }
+
+            for (let i = 0; i < plates.length; i++) {
+                let p = plates[i];
+                p.x -= currentSpeed; 
+                p.el.style.left = p.x + '%';
+
+                if (p.x < -10) {
+                    p.el.remove();
+                    plates.splice(i, 1);
+                    i--;
+                    
+                    playSound(errorSound);
+                    lives--;
+                    updateUI();
+                    
+                    setChefEmotion('shocked');
+                    chefFace.style.transform = "scaleX(-1) scale(1.1)";
+                    setTimeout(() => chefFace.style.transform = "scaleX(-1) scale(1)", 300);
+                    chefBubble.textContent = "อ๊ะ! หล่นแล้ว!";
+                    
+                    if (lives <= 0) {
+                        gameActive = false;
+                        document.getElementById('finalScore').textContent = score;
+                        document.getElementById('finalLevel').textContent = `LEVEL ${level}`;
+                        setTimeout(() => { screens.gameover.style.display = 'flex'; }, 500);
+                        return;
+                    }
+                }
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        // ---------------- 🔘 ระบบตรวจคำตอบ ----------------
+        function checkAnswer(answerType, btnElement) {
+            if (!gameActive || isPaused || plates.length === 0) return;
+            
+            let targetPlate = plates[0];
+            if (targetPlate.x > 80) return;
+            
+            if (targetPlate.type === answerType) {
+                playSound(successSound);
+                
+                btnElement.classList.add('flash-green');
+                setTimeout(() => btnElement.classList.remove('flash-green'), 200);
+                
+                targetPlate.el.style.transition = '0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                targetPlate.el.style.transform = 'translateY(-80px) scale(0)';
+                targetPlate.el.style.opacity = '0';
+                
+                score += 50 * level; 
+                correctSinceLevelUp++;
+                updateUI();
+                
+                setChefEmotion('happy');
+                chefFace.style.transform = "scaleX(1) scale(1.1)";
+                setTimeout(() => chefFace.style.transform = "scaleX(1) scale(1)", 200);
+                chefBubble.textContent = "ถูกเป๊ะ!";
+                showFeedback("✨", "");
+                
+                setTimeout(() => targetPlate.el.remove(), 300);
+                plates.shift();
+
+                if (correctSinceLevelUp >= 2) {
+                    triggerLevelUp();
+                }
+                
+            } else {
+                playSound(errorSound);
+                
+                btnElement.classList.add('flash-red');
+                setTimeout(() => btnElement.classList.remove('flash-red'), 200);
+                
+                targetPlate.el.style.transform = 'translateX(-10px)';
+                setTimeout(() => targetPlate.el.style.transform = 'translateX(10px)', 50);
+                setTimeout(() => targetPlate.el.style.transform = 'translateX(0)', 100);
+                
+                lives--;
+                updateUI();
+                
+                setChefEmotion('angry');
+                chefBubble.textContent = "ผิดคิวจ้า!";
+                showFeedback("❌", "");
+                
+                if (lives <= 0) {
+                    gameActive = false;
+                    document.getElementById('finalScore').textContent = score;
+                    document.getElementById('finalLevel').textContent = `LEVEL ${level}`;
+                    setTimeout(() => { screens.gameover.style.display = 'flex'; }, 500);
+                }
+            }
+        }
+
+        function showFeedback(msg, color) { 
+            feedbackText.textContent = msg; 
+            feedbackText.classList.remove('show'); 
+            void feedbackText.offsetWidth; 
+            feedbackText.classList.add('show'); 
+        }
+
+    </script>
+</body>
+</html>
